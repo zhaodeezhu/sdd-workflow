@@ -1,0 +1,161 @@
+src/marketplace/commands/publish.js
+  2ea1c09abf8cfe14 1-86
+src/marketplace/commands/info.js
+  2ea1c09abf8cfe14 1-96
+src/marketplace/commands/search.js
+  2ea1c09abf8cfe14 1-59
+src/marketplace/utils/http.js
+  2ea1c09abf8cfe14 1-104
+src/marketplace/commands/update.js
+  2ea1c09abf8cfe14 1-136
+registry/registry.schema.json
+  2ea1c09abf8cfe14 1-95
+src/marketplace/commands/list.js
+  2ea1c09abf8cfe14 1-84
+templates/skills/sdd-plan/SKILL.md
+  9340676b24e54b04 165
+templates/skills/sdd-plan/manifest.json
+  2ea1c09abf8cfe14 1-15
+templates/skills/sdd-tasks/manifest.json
+  2ea1c09abf8cfe14 1-14
+templates/skills/sdd-constitution/manifest.json
+  2ea1c09abf8cfe14 1-12
+bin/sdd-init.js
+  9340676b24e54b04 7-11,22,31-35,41-45
+templates/skills/sdd-implement/manifest.json
+  2ea1c09abf8cfe14 1-14
+templates/skills/sdd-init/manifest.json
+  2ea1c09abf8cfe14 1-12
+templates/marketplace/skill-template/manifest.json
+  2ea1c09abf8cfe14 1-12
+src/marketplace/utils/git.js
+  2ea1c09abf8cfe14 1-77
+templates/skills/sdd-run/SKILL.md
+  9340676b24e54b04 36-42,45,48,76-81,84,193-195,225-226,239-240,282,284,286,288-289,291,293,295-299,301,303-306,308-321,324,328,333-339,360-364,426,439
+src/marketplace/commands/validate.js
+  2ea1c09abf8cfe14 1-50
+src/marketplace/core/skill-package.js
+  2ea1c09abf8cfe14 1-177
+src/marketplace/core/lockfile.js
+  2ea1c09abf8cfe14 1-115
+bin/sdd.js
+  2ea1c09abf8cfe14 1-19
+CHANGELOG.md
+  9340676b24e54b04 5-19
+  c97fff4fb6de6085 1-4,20-30
+src/installer.js
+  2ea1c09abf8cfe14 104-105,560-661
+  9340676b24e54b04 5,8,16,19,21-24,65,78-81,98-103,108,123,138-140,143,145-425,428-457,484-488,501-506
+package.json
+  2ea1c09abf8cfe14 6
+  9340676b24e54b04 3,7-8
+templates/skills/sdd-idea/manifest.json
+  2ea1c09abf8cfe14 1-12
+src/marketplace/core/resolver.js
+  2ea1c09abf8cfe14 1-191
+templates/skills/sdd-specify/SKILL.md
+  9340676b24e54b04 213-215,222
+src/marketplace/utils/yaml-frontmatter.js
+  2ea1c09abf8cfe14 1-73
+src/marketplace/cli.js
+  2ea1c09abf8cfe14 1-128
+templates/skills/sdd-testcases/manifest.json
+  2ea1c09abf8cfe14 1-14
+templates/skills/sdd-review/manifest.json
+  2ea1c09abf8cfe14 1-15
+src/marketplace/utils/log.js
+  2ea1c09abf8cfe14 1-80
+templates/skills/sdd-split/SKILL.md
+  9340676b24e54b04 3-4,11-35,54,56,58-59,61,66-81,83-88,92,133,147,170,185,210,220,227,229,231-232,378,426-432
+templates/specify/templates/constitution-template.md
+  3b6d3093d99a454c 12-16
+templates/skills/sdd-specify/manifest.json
+  2ea1c09abf8cfe14 1-12
+src/marketplace/commands/create.js
+  2ea1c09abf8cfe14 1-100
+src/marketplace/commands/uninstall.js
+  2ea1c09abf8cfe14 1-65
+templates/marketplace/skill-template/SKILL.md
+  2ea1c09abf8cfe14 1-30
+templates/skills/sdd-run/manifest.json
+  2ea1c09abf8cfe14 1-19
+templates/skills/sdd-review/SKILL.md
+  9340676b24e54b04 3,7,11-12,36,47-67,80,86-169,171-172,174-176,178,180,182-186,188-192,194-218,220-270,272-285,287-292,294,296,298-304,306,308-317,326,332-338,347-349,353-356,360,364,371-387,396,401-403,405-411,413-414,416-417,436,448,483,489-498
+templates/skills/sdd-tasks/SKILL.md
+  9340676b24e54b04 120
+src/marketplace/utils/fs.js
+  2ea1c09abf8cfe14 1-138
+src/marketplace/core/source.js
+  2ea1c09abf8cfe14 1-109
+README.md
+  9340676b24e54b04 72-76,78-91
+templates/skills/sdd-split/manifest.json
+  2ea1c09abf8cfe14 1-12
+src/marketplace/core/registry.js
+  2ea1c09abf8cfe14 1-110
+src/marketplace/commands/install.js
+  2ea1c09abf8cfe14 1-204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "e96bd98ec24d4e42ee3a927844c427867b366f4c",
+  "prompts": {
+    "2ea1c09abf8cfe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "894eaaa3-ca60-4dac-ab2b-d800d7930233",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 2594,
+      "total_deletions": 0,
+      "accepted_lines": 2594,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/ee9bf1e73ba43ffa63f422c658c94a12e734823561b2f93865ae8aa99bcdc751"
+    },
+    "3b6d3093d99a454c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e15db14-ca30-4249-b047-23970adcf8f3",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 0,
+      "accepted_lines": 5,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b826b8b5f1a8e05b1d5960755e3511bbbf3298090bdfbd201d06a228acd6ca2b"
+    },
+    "9340676b24e54b04": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d7c264c0-fdb9-4a35-a47a-d0ad6c6b1045",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 873,
+      "total_deletions": 217,
+      "accepted_lines": 855,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a1c8007c5c3f9be8d88891e6b6f3f392754c703873f9f556c06ef36a41b9ff30"
+    },
+    "c97fff4fb6de6085": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6ba91d1b-a290-41bd-9526-6903b20b9753",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 15,
+      "total_deletions": 0,
+      "accepted_lines": 15,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/fd63468d3cc0f600a2fdaad5253b2d438710113ed1527305e11f31b62e45b842"
+    }
+  }
+}
