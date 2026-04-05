@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "updated": "2026-04-05T00:00:00Z",
+  "skills": {
+    "sdd-init": {
+      "name": "sdd-init",
+      "version": "1.1.0",
+      "description": "初始化 SDD 工作流 - 分析项目并生成项目宪章",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-init",
+      "keywords": ["init", "initialize", "初始化"],
+      "category": "core-pipeline",
+      "license": "MIT"
+    },
+    "sdd-constitution": {
+      "name": "sdd-constitution",
+      "version": "1.1.0",
+      "description": "创建或更新项目宪章 - 定义技术栈、开发原则和项目约束",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-constitution",
+      "keywords": ["constitution", "charter", "宪章", "原则"],
+      "category": "core-pipeline",
+      "license": "MIT"
+    },
+    "sdd-specify": {
+      "name": "sdd-specify",
+      "version": "1.1.0",
+      "description": "创建功能规格文档 - 定义功能需求、用户故事和验收标准",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-specify",
+      "keywords": ["specification", "requirements", "spec", "规格", "需求"],
+      "category": "core-pipeline",
+      "dependencies": {},
+      "license": "MIT"
+    },
+    "sdd-testcases": {
+      "name": "sdd-testcases",
+      "version": "1.1.0",
+      "description": "设计测试用例 - 基于规格文档创建全面的测试场景",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-testcases",
+      "keywords": ["test", "testcases", "testing", "测试用例", "TDD"],
+      "category": "core-pipeline",
+      "dependencies": { "sdd-specify": "^1.0.0" },
+      "license": "MIT"
+    },
+    "sdd-plan": {
+      "name": "sdd-plan",
+      "version": "1.1.0",
+      "description": "创建技术实施方案 - 基于规格和测试用例设计实现方案",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-plan",
+      "keywords": ["plan", "implementation", "技术方案", "实施计划"],
+      "category": "core-pipeline",
+      "dependencies": { "sdd-specify": "^1.0.0", "sdd-testcases": "^1.0.0" },
+      "license": "MIT"
+    },
+    "sdd-tasks": {
+      "name": "sdd-tasks",
+      "version": "1.1.0",
+      "description": "分解开发任务 - 将技术方案拆分为可执行的开发任务",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-tasks",
+      "keywords": ["tasks", "breakdown", "任务分解"],
+      "category": "core-pipeline",
+      "dependencies": { "sdd-plan": "^1.0.0" },
+      "license": "MIT"
+    },
+    "sdd-implement": {
+      "name": "sdd-implement",
+      "version": "1.1.0",
+      "description": "执行开发实现 - 按照任务列表进行编码实现",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-implement",
+      "keywords": ["implement", "coding", "实现", "编码"],
+      "category": "core-pipeline",
+      "dependencies": { "sdd-tasks": "^1.0.0" },
+      "license": "MIT"
+    },
+    "sdd-review": {
+      "name": "sdd-review",
+      "version": "1.1.0",
+      "description": "质量评审 - 对照规格和方案进行代码质量检查",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-review",
+      "keywords": ["review", "quality", "评审", "质量"],
+      "category": "core-pipeline",
+      "dependencies": { "sdd-specify": "^1.0.0", "sdd-plan": "^1.0.0" },
+      "license": "MIT"
+    },
+    "sdd-run": {
+      "name": "sdd-run",
+      "version": "1.1.0",
+      "description": "全自动流水线 - 从规格到实现的完整自动化流程",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-run",
+      "keywords": ["run", "pipeline", "automation", "流水线", "自动化"],
+      "category": "automation",
+      "dependencies": { "sdd-specify": "^1.0.0", "sdd-testcases": "^1.0.0", "sdd-plan": "^1.0.0", "sdd-tasks": "^1.0.0", "sdd-implement": "^1.0.0", "sdd-review": "^1.0.0" },
+      "license": "MIT"
+    },
+    "sdd-split": {
+      "name": "sdd-split",
+      "version": "1.1.0",
+      "description": "拆分大型文档 - 将过大的规格或方案拆分为更小的模块",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-split",
+      "keywords": ["split", "modular", "拆分", "模块化"],
+      "category": "utility",
+      "license": "MIT"
+    },
+    "sdd-idea": {
+      "name": "sdd-idea",
+      "version": "1.1.0",
+      "description": "功能创意生成 - 头脑风暴和功能构思工具",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-idea",
+      "keywords": ["idea", "brainstorm", "创意", "头脑风暴"],
+      "category": "utility",
+      "license": "MIT"
+    }
+  }
+}

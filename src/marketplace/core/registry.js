@@ -6,7 +6,7 @@ const log = require('../utils/log');
 const { readJsonFile, writeJsonFile } = require('../utils/fs');
 const { getJson } = require('../utils/http');
 
-const DEFAULT_REGISTRY_URL = 'https://raw.githubusercontent.com/sdd-workflow/sdd-registry/main/registry.json';
+const DEFAULT_REGISTRY_URL = 'https://raw.githubusercontent.com/zhaodeezhu/sdd-workflow/main/registry/registry.json';
 const CACHE_FILE = '.registry-cache.json';
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
