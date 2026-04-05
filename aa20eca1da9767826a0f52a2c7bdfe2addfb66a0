@@ -1,0 +1,26 @@
+registry/registry.json
+  2ea1c09abf8cfe14 1-123
+src/marketplace/core/registry.js
+  2ea1c09abf8cfe14 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "aa20eca1da9767826a0f52a2c7bdfe2addfb66a0",
+  "prompts": {
+    "2ea1c09abf8cfe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "894eaaa3-ca60-4dac-ab2b-d800d7930233",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 124,
+      "total_deletions": 1,
+      "accepted_lines": 124,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/f5fe6f5f9e11944ea6c4cbdb7c88e4fc8c83577a4e5a428bc7f012ef01c748ca"
+    }
+  }
+}
