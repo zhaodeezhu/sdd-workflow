@@ -1,0 +1,24 @@
+package.json
+  2ea1c09abf8cfe14 26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "ae39f07b7f79afe0de8aa107ee0713cff5d803fe",
+  "prompts": {
+    "2ea1c09abf8cfe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "894eaaa3-ca60-4dac-ab2b-d800d7930233",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/f6170f732346fa15517a0a29eeb6800774aeded58a8e62d6a9dde5ff1edbd46e"
+    }
+  }
+}
