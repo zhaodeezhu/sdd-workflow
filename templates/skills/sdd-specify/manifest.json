@@ -1,0 +1,12 @@
+{
+  "name": "sdd-specify",
+  "version": "1.1.0",
+  "description": "创建功能规格文档 - 定义功能需求、用户故事和验收标准",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["specification", "requirements", "spec", "规格", "需求"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {},
+  "files": ["SKILL.md"]
+}

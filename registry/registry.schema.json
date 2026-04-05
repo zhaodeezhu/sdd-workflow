@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SDD Skill Registry",
+  "description": "Schema for the SDD skill registry index file",
+  "type": "object",
+  "required": ["version", "updated", "skills"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "description": "Registry schema version",
+      "minimum": 1
+    },
+    "updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp (ISO 8601)"
+    },
+    "skills": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "required": ["name", "version", "description", "author", "source"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$",
+              "description": "Skill identifier (must match directory name)"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+",
+              "description": "Semver version"
+            },
+            "description": {
+              "type": "string",
+              "description": "Brief description of the skill"
+            },
+            "author": {
+              "type": "string",
+              "description": "Author or organization name"
+            },
+            "source": {
+              "type": "string",
+              "description": "Source specifier (e.g., github:user/repo/path)"
+            },
+            "sourceUrl": {
+              "type": "string",
+              "format": "uri",
+              "description": "Human-browsable URL for the skill source"
+            },
+            "keywords": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Keywords for search indexing"
+            },
+            "category": {
+              "type": "string",
+              "enum": ["core-pipeline", "automation", "quality", "utility", "integration", "custom"],
+              "description": "Skill category"
+            },
+            "dependencies": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "string",
+                  "description": "Semver range for the dependency"
+                }
+              },
+              "description": "Map of skill name to semver range"
+            },
+            "sddVersion": {
+              "type": "string",
+              "description": "Compatible sdd-workflow version range"
+            },
+            "license": {
+              "type": "string",
+              "description": "SPDX license identifier"
+            },
+            "installed": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Download/install count"
+            },
+            "published": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Publication date (ISO 8601)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

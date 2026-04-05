@@ -1,0 +1,12 @@
+{
+  "source": "{source_type}",
+  "source_url": "{source_url}",
+  "page_id": "{page_id}",
+  "title": "{title}",
+  "author": "{author}",
+  "last_updated": "{last_updated}",
+  "fetched_at": "{fetched_at}",
+  "space_key": "{space_key}",
+  "version": "{version}",
+  "child_pages": []
+}

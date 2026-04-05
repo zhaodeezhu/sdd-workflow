@@ -1,0 +1,12 @@
+{
+  "name": "${name}",
+  "version": "0.1.0",
+  "description": "${description}",
+  "author": "",
+  "license": "MIT",
+  "keywords": [],
+  "category": "custom",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {},
+  "files": ["SKILL.md", "manifest.json"]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "sdd-testcases",
+  "version": "1.1.0",
+  "description": "设计测试用例 - 基于规格文档创建全面的测试场景",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["test", "testcases", "testing", "测试用例", "TDD"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {
+    "sdd-specify": "^1.0.0"
+  },
+  "files": ["SKILL.md"]
+}

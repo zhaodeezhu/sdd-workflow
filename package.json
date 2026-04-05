@@ -1,0 +1,31 @@
+{
+  "name": "sdd-workflow",
+  "version": "1.1.0",
+  "description": "SDD (Specification-Driven Development) workflow toolkit for Claude Code - install skills, templates and tooling to any project",
+  "bin": {
+    "sdd": "./bin/sdd.js",
+    "sdd-init": "./bin/sdd-init.js",
+    "sdd-workflow": "./bin/sdd-init.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sdd",
+    "claude-code",
+    "ai-workflow",
+    "specification-driven",
+    "tdd",
+    "code-review"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

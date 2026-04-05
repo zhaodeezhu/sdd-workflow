@@ -1,0 +1,12 @@
+{
+  "name": "sdd-idea",
+  "version": "1.1.0",
+  "description": "功能创意生成 - 头脑风暴和功能构思工具",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["idea", "brainstorm", "创意", "头脑风暴"],
+  "category": "utility",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {},
+  "files": ["SKILL.md"]
+}

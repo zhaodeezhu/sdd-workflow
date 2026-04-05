@@ -1,0 +1,14 @@
+{
+  "name": "sdd-implement",
+  "version": "1.1.0",
+  "description": "执行开发实现 - 按照任务列表进行编码实现",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["implement", "coding", "实现", "编码", "开发"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {
+    "sdd-tasks": "^1.0.0"
+  },
+  "files": ["SKILL.md"]
+}
