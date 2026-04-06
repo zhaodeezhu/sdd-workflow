@@ -1,0 +1,24 @@
+templates/skills/sdd-review/SKILL.md
+  ac6a77c62f756c47 314,316-318,400-490,492-493,497,499,520-521,554-558,566,573-574,599-610
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "c61b68d27c4b026085633d86c9e80c1f827fbe7b",
+  "prompts": {
+    "ac6a77c62f756c47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "162c9050-c17d-469a-a435-85ab90a1ded2",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 126,
+      "total_deletions": 14,
+      "accepted_lines": 126,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/e0abb2549ba1b12da5c7c3a2ca2d5dc988d5e2069618ac5258e835e3ae7d0402"
+    }
+  }
+}
