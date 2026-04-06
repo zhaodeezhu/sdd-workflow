@@ -1,0 +1,24 @@
+.claude-plugin/plugin.json
+  ac6a77c62f756c47 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "16aace5d609aca60ada934e56acd798ee94376fe",
+  "prompts": {
+    "ac6a77c62f756c47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "162c9050-c17d-469a-a435-85ab90a1ded2",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 0,
+      "accepted_lines": 5,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/378601a6e0fbaa44873d4d52af60229bfcda337591ea967400b4c777de60d919"
+    }
+  }
+}
