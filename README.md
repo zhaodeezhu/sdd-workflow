@@ -17,18 +17,58 @@ Every phase produces a document. Documents become contracts. AI implements again
 
 ## Quick Start
 
-### 1. Install
+### Option A: Install from Marketplace (Recommended)
+
+Add the SDD Workflow marketplace, then install the plugin:
+
+```bash
+# Step 1: Add marketplace
+claude plugin marketplace add zhaodeezhu/sdd-workflow
+
+# Step 2: Install plugin
+claude plugin install sdd-workflow@sdd-workflow
+```
+
+Skills are namespaced under `sdd-workflow`:
+
+```
+/sdd-workflow:sdd-init        Initialize SDD for your project
+/sdd-workflow:sdd-run         Full auto pipeline
+/sdd-workflow:sdd-specify     Create specification
+/sdd-workflow:sdd-testcases   Design test cases
+/sdd-workflow:sdd-plan        Plan implementation
+/sdd-workflow:sdd-tasks       Break down tasks
+/sdd-workflow:sdd-implement   Execute development
+/sdd-workflow:sdd-review      Independent quality review
+...
+```
+
+Update to latest version:
+
+```bash
+claude plugin update sdd-workflow
+```
+
+Uninstall:
+
+```bash
+claude plugin uninstall sdd-workflow
+```
+
+### Option B: Install via npx (File-Based)
+
+Copies skills, templates, and team configurations directly into your project:
 
 ```bash
 npx sdd-workflow
 ```
 
-This copies skills, templates, and team configurations into your project:
+This creates the following structure:
 
 ```
 your-project/
 ├── .claude/
-│   ├── skills/sdd-*/       10 SDD skills
+│   ├── skills/sdd-*/       11 SDD skills
 │   └── teams/               Team configurations
 └── .specify/
     ├── memory/              Project constitution (generated later)
@@ -37,27 +77,32 @@ your-project/
     └── scripts/             Utility scripts
 ```
 
-### 2. Initialize
-
-Open Claude Code in your project and run:
+Skills are available without namespace prefix:
 
 ```
-/sdd-init
+/sdd-init                    Initialize SDD for your project
+/sdd-run                     Full auto pipeline
+/sdd-specify                 Create specification
+...
+```
+
+### Initialize & Develop
+
+Regardless of install method, open Claude Code in your project and run:
+
+```
+/sdd-init                    # or /sdd-workflow:sdd-init for marketplace users
 ```
 
 This analyzes your project structure, detects your tech stack, and generates a project-specific constitution at `.specify/memory/constitution.md`.
 
-### 3. Develop
-
-Start a feature using the full auto pipeline:
+Then start a feature:
 
 ```
+# Full auto pipeline
 /sdd-run 001 Add user authentication
-```
 
-Or step through manually:
-
-```
+# Or step through manually
 /sdd-specify User authentication
 /sdd-testcases
 /sdd-plan
@@ -66,7 +111,20 @@ Or step through manually:
 /sdd-review
 ```
 
-## Installation Options
+> **Marketplace users**: prefix all commands with `sdd-workflow:`, e.g. `/sdd-workflow:sdd-run 001 Add user authentication`
+
+## Installation Comparison
+
+| | Marketplace Install | npx Install |
+|---|---|---|
+| Install | `plugin marketplace add` then `plugin install` | `npx sdd-workflow` |
+| Files in project | None | Skills, templates, teams copied to project |
+| Skill prefix | `/sdd-workflow:sdd-*` | `/sdd-*` |
+| Updates | `plugin update sdd-workflow` | `npx sdd-workflow --update` |
+| Customization | Fork the repo | Edit files in `.claude/skills/` |
+| Best for | Quick start, always latest | Full control, offline use, custom modifications |
+
+## npx Installation Options
 
 ```bash
 npx sdd-workflow              # Standard install (skip existing files)
@@ -157,9 +215,18 @@ Each feature is organized under `.specify/specs/`:
 
 ## How It Works with Claude Code
 
-SDD Workflow installs as a set of Claude Code skills. Skills are markdown files that Claude Code reads as instructions when you invoke them with `/command-name`.
+SDD Workflow provides two installation paths, each with different mechanics:
 
-### Skill Lifecycle
+### Marketplace Mode
+
+1. `claude plugin marketplace add zhaodeezhu/sdd-workflow` registers the marketplace
+2. `claude plugin install sdd-workflow@sdd-workflow` installs the plugin from marketplace
+3. Claude Code loads skill names/descriptions at session start (progressive disclosure)
+4. You invoke a skill with `/sdd-workflow:sdd-<name>`
+5. Full skill content loads on demand — no files in your project
+6. Skills create `.specify/` directories as needed during execution
+
+### File-Based Mode
 
 1. `npx sdd-workflow` copies skill files into `.claude/skills/`
 2. Claude Code discovers skills automatically from that directory

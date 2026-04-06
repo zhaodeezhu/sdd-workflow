@@ -1,0 +1,30 @@
+{
+  "name": "sdd-workflow",
+  "owner": {
+    "name": "zhaodeezhu"
+  },
+  "metadata": {
+    "description": "SDD (Specification-Driven Development) workflow toolkit for Claude Code",
+    "version": "1.2.0"
+  },
+  "plugins": [
+    {
+      "name": "sdd-workflow",
+      "description": "SDD workflow skills: specify, testcases, plan, tasks, implement, review",
+      "source": "./",
+      "skills": [
+        "./skills/sdd-constitution",
+        "./skills/sdd-idea",
+        "./skills/sdd-implement",
+        "./skills/sdd-init",
+        "./skills/sdd-plan",
+        "./skills/sdd-review",
+        "./skills/sdd-run",
+        "./skills/sdd-specify",
+        "./skills/sdd-split",
+        "./skills/sdd-tasks",
+        "./skills/sdd-testcases"
+      ]
+    }
+  ]
+}
