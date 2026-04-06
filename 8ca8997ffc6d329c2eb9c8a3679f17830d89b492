@@ -1,0 +1,26 @@
+README.zh-CN.md
+  ac6a77c62f756c47 1-293
+skills/sdd-review/SKILL.md
+  ac6a77c62f756c47 45-46,64-68,316-378,425,427-431,435,589-590,604-605,664-676
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8ca8997ffc6d329c2eb9c8a3679f17830d89b492",
+  "prompts": {
+    "ac6a77c62f756c47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "162c9050-c17d-469a-a435-85ab90a1ded2",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 394,
+      "total_deletions": 35,
+      "accepted_lines": 388,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/11e836a527bfff9f3e4f80c72f70110cf0e29feb4795f311f83fa69e2991a197"
+    }
+  }
+}
