@@ -1,0 +1,26 @@
+.claude-plugin/marketplace.json
+  ac6a77c62f756c47 1-30
+README.md
+  ac6a77c62f756c47 20,22-60,66,71,80,83-86,89,91,94,97,99,102-105,114-125,127,218,220-227,229
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "acef56ae07d1a2d59fa41f9da7f5898113dde255",
+  "prompts": {
+    "ac6a77c62f756c47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "162c9050-c17d-469a-a435-85ab90a1ded2",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 130,
+      "total_deletions": 33,
+      "accepted_lines": 113,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/e9a6f6db439373e425313c0263647d9399330567f1754c7ecd761a6cde4049f7"
+    }
+  }
+}
