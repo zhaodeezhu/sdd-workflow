@@ -1,0 +1,17 @@
+{
+  "name": "sdd-fix",
+  "version": "1.0.0",
+  "description": "Bug修复 - 3 Agent并行排查根因，红-绿-重构修复，文档沉淀闭环",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["fix", "bug", "debug", "repair", "修复", "调试", "排错"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {
+    "sdd-specify": "^1.0.0",
+    "sdd-plan": "^1.0.0",
+    "sdd-testcases": "^1.0.0",
+    "sdd-implement": "^1.0.0"
+  },
+  "files": ["SKILL.md"]
+}
