@@ -1,0 +1,15 @@
+{
+  "name": "sdd-review",
+  "version": "1.1.0",
+  "description": "质量评审 - 对照规格和方案进行代码质量检查",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["review", "quality", "code review", "评审", "质量"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {
+    "sdd-specify": "^1.0.0",
+    "sdd-plan": "^1.0.0"
+  },
+  "files": ["SKILL.md"]
+}

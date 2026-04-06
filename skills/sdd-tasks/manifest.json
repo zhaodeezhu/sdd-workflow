@@ -1,0 +1,14 @@
+{
+  "name": "sdd-tasks",
+  "version": "1.1.0",
+  "description": "分解开发任务 - 将技术方案拆分为可执行的开发任务",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["tasks", "breakdown", "任务分解", "开发任务"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {
+    "sdd-plan": "^1.0.0"
+  },
+  "files": ["SKILL.md"]
+}

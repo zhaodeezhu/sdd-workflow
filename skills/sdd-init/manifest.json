@@ -1,0 +1,12 @@
+{
+  "name": "sdd-init",
+  "version": "1.1.0",
+  "description": "初始化 SDD 工作流 - 分析项目并生成项目宪章",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["init", "initialize", "初始化", "宪章"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {},
+  "files": ["SKILL.md"]
+}

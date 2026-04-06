@@ -1,0 +1,19 @@
+{
+  "name": "sdd-run",
+  "version": "1.1.0",
+  "description": "全自动流水线 - 从规格到实现的完整自动化流程",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["run", "pipeline", "automation", "流水线", "自动化"],
+  "category": "automation",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {
+    "sdd-specify": "^1.0.0",
+    "sdd-testcases": "^1.0.0",
+    "sdd-plan": "^1.0.0",
+    "sdd-tasks": "^1.0.0",
+    "sdd-implement": "^1.0.0",
+    "sdd-review": "^1.0.0"
+  },
+  "files": ["SKILL.md"]
+}

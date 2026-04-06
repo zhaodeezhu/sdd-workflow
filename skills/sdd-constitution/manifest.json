@@ -1,0 +1,12 @@
+{
+  "name": "sdd-constitution",
+  "version": "1.1.0",
+  "description": "创建或更新项目宪章 - 定义技术栈、开发原则和项目约束",
+  "author": "sdd-workflow",
+  "license": "MIT",
+  "keywords": ["constitution", "charter", "宪章", "原则"],
+  "category": "core-pipeline",
+  "sddVersion": ">=1.0.0",
+  "dependencies": {},
+  "files": ["SKILL.md"]
+}
