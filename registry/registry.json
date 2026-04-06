@@ -109,6 +109,22 @@
       "category": "utility",
       "license": "MIT"
     },
+    "sdd-fix": {
+      "name": "sdd-fix",
+      "version": "1.0.0",
+      "description": "Bug修复 - 3 Agent并行排查根因，红-绿-重构修复，文档沉淀闭环",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-fix",
+      "keywords": ["fix", "bug", "debug", "repair", "修复", "调试", "排错"],
+      "category": "core-pipeline",
+      "dependencies": {
+        "sdd-specify": "^1.0.0",
+        "sdd-plan": "^1.0.0",
+        "sdd-testcases": "^1.0.0",
+        "sdd-implement": "^1.0.0"
+      },
+      "license": "MIT"
+    },
     "sdd-idea": {
       "name": "sdd-idea",
       "version": "1.1.0",
