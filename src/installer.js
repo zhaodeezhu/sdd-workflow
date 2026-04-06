@@ -134,10 +134,19 @@ async function install(targetDir, options = {}) {
   console.log('     /sdd-tasks                     — Break down tasks');
   console.log('     /sdd-implement                 — Execute development');
   console.log('     /sdd-review                    — Quality review');
-  console.log('     /sdd-run <id> <description>    — Full auto pipeline');
+  console.log('     /sdd-run <id> <description>    — Full auto pipeline (recommended)');
   console.log('');
-  console.log('  💡 To update SDD workflow in the future:');
+  console.log('  🔔 Configure task completion notifications (Feishu):');
+  console.log('     /sdd-notify configure');
+  console.log('');
+  console.log('  💡 To update Sdd workflow in the future:');
   console.log('     npx sdd-workflow --update');
+  console.log('');
+  console.log('  🔔 Configure task completion notifications (Feishu):');
+  console.log('     /sdd-notify configure');
+  console.log('');
+  console.log('  🔔 Configure task completion notifications (WeChat Work/Feishu):');
+  console.log('     /sdd-notify configure');
   console.log('');
 
   // 9. Suggest CLAUDE.md additions
@@ -550,8 +559,9 @@ function printClaudeMdSuggestions(targetDir) {
     const gitignore = fs.readFileSync(gitignorePath, 'utf8');
     if (!gitignore.includes('.specify/specs/')) {
       console.log('  💡 Consider adding to .gitignore:');
-      console.log('     .specify/specs/     # SDD feature specs (project-specific)');
-      console.log('     .specify/memory/    # SDD project memory');
+      console.log('     .specify/specs/           # SDD feature specs (project-specific)');
+      console.log('     .specify/memory/          # SDD project memory');
+      console.log('     .specify/notification.json # SDD notification config (contains webhook URL)');
       console.log('');
     }
   }

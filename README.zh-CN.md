@@ -174,6 +174,20 @@ npx sdd-workflow --update --dry-run  # 预览更新
 | 命令 | 说明 |
 |------|------|
 | `/sdd-split` | 拆分大型 SDD 文档为模块化结构 |
+| `/sdd-notify configure` | 配置飞书任务完成通知 |
+| `/sdd-notify test` | 发送测试通知 |
+
+### 任务完成通知
+
+SDD Workflow 支持在长任务（`sdd-run`、`sdd-review`）执行完成时，自动推送飞书卡片消息通知，无需盯盘。
+
+**配置步骤**：
+
+1. 在 [飞书开放平台](https://open.feishu.cn/app) 创建应用，授予 `im:message:send_as_bot` 权限
+2. 运行 `/sdd-init` 时跟随通知配置引导，或随时运行 `/sdd-notify configure` 单独配置
+3. 提供 App ID、App Secret 和 open_id（通过应用 API 调试台获取）
+
+配置保存在 `.specify/notification.json`。通知失败不会中断主工作流。
 
 ## 项目宪法
 
@@ -272,8 +286,9 @@ SDD Workflow 提供两种安装方式，工作机制各有不同：
 建议添加：
 
 ```
-.specify/specs/     # 功能规格（项目专属，可重新生成）
-.specify/memory/    # 项目记忆（本地上下文）
+.specify/specs/              # 功能规格（项目专属，可重新生成）
+.specify/memory/             # 项目记忆（本地上下文）
+.specify/notification.json   # 通知凭证（敏感信息）
 ```
 
 ### 自定义

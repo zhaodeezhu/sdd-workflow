@@ -174,6 +174,20 @@ npx sdd-workflow --update --dry-run  # Preview updates
 | Command | Description |
 |---------|-------------|
 | `/sdd-split` | Split large SDD documents into modular structure |
+| `/sdd-notify configure` | Configure Feishu notification for task completion |
+| `/sdd-notify test` | Send a test notification |
+
+### Notifications
+
+SDD Workflow can push Feishu messages when long-running tasks (`sdd-run`, `sdd-review`) complete, so you don't need to watch the terminal.
+
+**Setup**:
+
+1. Create a Feishu app at [open.feishu.cn/app](https://open.feishu.cn/app) and grant it `im:message:send_as_bot` permission
+2. Run `/sdd-init` and follow the notification setup prompt, **or** run `/sdd-notify configure` at any time
+3. Provide App ID, App Secret, and your open_id (obtained via the app's API Explorer)
+
+Configuration is saved to `.specify/notification.json`. Notification failures never interrupt the main workflow.
 
 ## Project Constitution
 
@@ -272,8 +286,9 @@ This project uses SDD (Specification-Driven Development).
 Consider adding:
 
 ```
-.specify/specs/     # Feature specs (project-specific, regenerable)
-.specify/memory/    # Project memory (local context)
+.specify/specs/              # Feature specs (project-specific, regenerable)
+.specify/memory/             # Project memory (local context)
+.specify/notification.json   # Notification credentials (sensitive)
 ```
 
 ### Customization

@@ -134,6 +134,16 @@
       "keywords": ["idea", "brainstorm", "创意", "头脑风暴"],
       "category": "utility",
       "license": "MIT"
+    },
+    "sdd-notify": {
+      "name": "sdd-notify",
+      "version": "1.0.0",
+        "description": "任务完成通知 - 通过飞书应用消息推送 SDD 工作流执行报告",
+      "author": "sdd-workflow",
+      "source": "github:zhaodeezhu/sdd-workflow/templates/skills/sdd-notify",
+      "keywords": ["notify", "notification", "通知", "飞书", "feishu"],
+      "category": "utility",
+      "license": "MIT"
     }
   }
 }

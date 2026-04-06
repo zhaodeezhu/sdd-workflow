@@ -381,6 +381,17 @@ invocable: true
 请验收以上结果。如需修改，告诉我具体问题。
 ```
 
+### 通知发送（自动）
+
+报告输出完成后，自动执行通知发送：
+
+1. 检查 `.specify/notification.json` 是否存在
+2. 如果存在且 `enabled` 不为 false，调用 `/sdd-notify run-complete {feature_id}`
+   - 从上下文传入参数：功能ID、功能名称、执行状态、迭代轮次、评审评分、变更文件统计
+3. 如果配置文件不存在或 `enabled=false`，跳过此步骤（不输出警告）
+
+> 通知是附加功能，任何通知失败不影响主工作流。详见 `/sdd-notify`。
+
 ---
 
 ## 中断与恢复
@@ -424,6 +435,7 @@ invocable: true
 | sdd-tasks | Planner A4 | 不修改，sdd-run 内部执行等价逻辑 |
 | sdd-implement | Generator B1 | 不修改，sdd-run 内部执行等价逻辑 |
 | sdd-review | Evaluator C1-C2（MACE多Agent） | 不修改，sdd-run 内部执行等价逻辑（3 Agent并行派发+仲裁） |
+| sdd-notify | 通知组件 | 不修改，sdd-run 在最终输出后自动调用 |
 
 现有 6 个 skill 继续可用，支持手动逐步执行。`sdd-run` 是纯编排层。
 

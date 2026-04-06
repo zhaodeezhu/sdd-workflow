@@ -1,0 +1,6 @@
+{
+  "name": "sdd-notify",
+  "version": "1.0.0",
+  "description": "任务完成通知 - 通过企业微信/飞书推送 SDD 工作流执行报告",
+  "dependencies": []
+}

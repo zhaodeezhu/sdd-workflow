@@ -672,5 +672,16 @@ sdd-implement ──→ sdd-review ──→ iterate/complete
 9. **建设性**: 评审不仅要发现问题，也要肯定亮点和值得复用的模式
 10. **效率**: 评审应聚焦于合约项和关键质量标准，不做过度审查
 11. **人类主权**: 评审结果由人类审批，AI 不自行决定通过或失败
+
+### 通知发送（自动）
+
+评审报告输出完成后，自动执行通知发送：
+
+1. 检查 `.specify/notification.json` 是否存在
+2. 如果存在且 `enabled` 不为 false，调用 `/sdd-notify review-complete {feature_id}`
+   - 从上下文传入参数：功能ID、功能名称、评审结论（PASS/ITERATE）、各维度评分、问题统计
+3. 如果配置文件不存在或 `enabled=false`，跳过此步骤（不输出警告）
+
+> 通知是附加功能，任何通知失败不影响主工作流。详见 `/sdd-notify`。
 12. **共识优先**: ≥2 个 Agent 确认的问题优先级高于单 Agent 发现的问题
 13. **技术栈适配**: 审查标准应结合项目实际技术栈和架构模式（参考 constitution.md）

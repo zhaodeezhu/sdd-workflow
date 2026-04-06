@@ -108,7 +108,54 @@ invocable: true
 3. **开发原则补充**：是否有团队特有的开发规范
 4. **项目特殊约束**：如 Java 版本限制、浏览器兼容性等
 
-### 4. 生成项目宪法
+### 4. 通知配置（可选）
+
+在生成宪法之前，引导用户配置任务完成通知。
+
+**步骤**:
+
+1. 询问用户是否需要配置飞书通知：
+   ```
+   🔔 是否配置任务完成通知？
+   
+   配置后 sdd-run / sdd-review 等长任务完成时，自动推送飞书消息通知你，无需盯盘。
+   
+   1. 现在配置（推荐）
+   2. 暂不配置（后续可通过 /sdd-notify configure 配置）
+   ```
+
+2. 如果用户选择「现在配置」，执行以下引导：
+
+   **a. 获取飞书应用凭证**：
+   ```
+   请提供飞书开放平台应用信息（在 https://open.feishu.cn/app 创建或查看）：
+   - App ID（cli_ 开头）
+   - App Secret
+   ```
+
+   **b. 获取接收者 open_id**：
+   ```
+   请提供你的飞书 open_id（ou_ 开头）。
+   
+   获取方式：
+   1. 打开 https://open.feishu.cn/api-explorer/
+   2. 右上角选择你的应用
+   3. 搜索「通过手机号获取用户 ID」
+   4. 输入你的手机号，点击调试
+   5. 复制返回的 open_id
+   ```
+
+   **c. 保存并发送测试消息**：
+   - 将配置写入 `.specify/notification.json`
+   - 获取 tenant_access_token
+   - 发送测试卡片消息验证配置
+   - 检查 `.gitignore` 是否包含 `.specify/notification.json`
+
+3. 如果用户选择「暂不配置」，跳过此步骤，继续执行
+
+> **注意**：飞书 open_id 是应用级别的，每个应用看到的同一用户 open_id 不同。不能用其他应用的 open_id，也不能用工号。必须通过本应用的 API 调试台获取。
+
+### 5. 生成项目宪法
 
 基于确认的探测结果和补充信息，生成 `.specify/memory/constitution.md`。
 
@@ -256,7 +303,7 @@ invocable: true
 <!-- 在此添加项目中遇到的实际问题和解决方案 -->
 ```
 
-### 5. 创建目录结构
+### 6. 创建目录结构
 
 确保以下目录存在：
 
@@ -274,7 +321,7 @@ invocable: true
 mkdir -p .specify/memory .specify/specs
 ```
 
-### 6. 输出初始化报告
+### 7. 输出初始化报告
 
 ```
 ━━━ SDD 初始化完成 ━━━
@@ -292,6 +339,12 @@ mkdir -p .specify/memory .specify/specs
 🚀 开始使用 SDD:
   /sdd-specify <功能名称>          创建功能规格
   /sdd-run <id> <功能描述>         全自动流水线（推荐）
+
+🔔 配置任务完成通知（可选）:
+  /sdd-notify configure            配置飞书通知
+
+  如果不配置，sdd-run/sdd-review 完成时不会打扰你。
+  配置后长任务完成自动推送到飞书，无需盯盘。
 ```
 
 ## 注意事项
