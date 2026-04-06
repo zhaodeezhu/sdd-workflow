@@ -1,0 +1,38 @@
+docs/sdd-workflow-design-philosophy.md
+  9c2ab0115615607c 46-49,66,76-77,144-151,155,157,175,183-184,238-242,328-335,421,426,440-442,470-471,478,485-486,492-493
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "3ad77ed04fd70a9df6fa6bda9c387a0ab2e3933b",
+  "prompts": {
+    "9c2ab0115615607c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d180aec5-0486-4ba5-b3a0-33608374395f",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 45,
+      "total_deletions": 27,
+      "accepted_lines": 45,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/93ec4d8b9ab886ae5464c12f3b4b6edbeaf85830bd8dc6e433b47572fe92288f"
+    },
+    "d694c7aed7d8e79a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fe1630b-ca7f-456c-9fef-ef5c251a4342",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 114,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/8db7b646e13c134f90484f86dde615d2d63dc72c955828d2957c9adf5d428e75"
+    }
+  }
+}
