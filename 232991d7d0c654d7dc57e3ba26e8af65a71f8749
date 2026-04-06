@@ -1,0 +1,28 @@
+package.json
+  ac6a77c62f756c47 3
+.claude-plugin/plugin.json
+  ac6a77c62f756c47 4
+.claude-plugin/marketplace.json
+  ac6a77c62f756c47 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "232991d7d0c654d7dc57e3ba26e8af65a71f8749",
+  "prompts": {
+    "ac6a77c62f756c47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "162c9050-c17d-469a-a435-85ab90a1ded2",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/653ad647f16b8d8ac0b0a7d197eac3ced6307c1dd898b6ccb374d2f4b37dda8e"
+    }
+  }
+}
