@@ -113,6 +113,14 @@ Then start a feature:
 
 > **Marketplace users**: prefix all commands with `sdd-workflow:`, e.g. `/sdd-workflow:sdd-run 001 Add user authentication`
 
+## Architecture
+
+![Architecture](image/architecture.png)
+
+## Industry Framework Comparison
+
+![Industry Framework Comparison](image/compare.png)
+
 ## Installation Comparison
 
 | | Marketplace Install | npx Install |
