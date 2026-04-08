@@ -1,0 +1,42 @@
+.claude-plugin/plugin.json
+  81557b1f65c5399f 4
+.claude-plugin/marketplace.json
+  81557b1f65c5399f 8
+package.json
+  81557b1f65c5399f 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "035f253f219f3c9dbf272ea1cb310aa20e588f50",
+  "prompts": {
+    "81557b1f65c5399f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59c00268-b517-4d15-b55b-562bd7635613",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/f00ba46407e219bb171ca3c58d260d3b28e1ac0dcdf02d339009075dcfec033f"
+    },
+    "dd1715e7a929a153": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f67e8b47-0603-4216-a723-292d603a398d",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 217,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c52ec28ac0037beabf555243a00b12b1bb56fd800aba77f0d7cdb63627dbaffc"
+    }
+  }
+}
