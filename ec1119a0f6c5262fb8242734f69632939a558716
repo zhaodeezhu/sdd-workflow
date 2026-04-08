@@ -1,0 +1,86 @@
+templates/specify/agent-prompts/review-c.md
+  4e3d1b01960cbce7 1-79
+templates/specify/agent-prompts/specify.md
+  4e3d1b01960cbce7 1-34
+skills/sdd-plan/SKILL.md
+  4e3d1b01960cbce7 11-19
+skills/sdd-tasks/SKILL.md
+  4e3d1b01960cbce7 11-19
+templates/specify/agent-prompts/fix.md
+  4e3d1b01960cbce7 1-43
+registry/registry.json
+  4e3d1b01960cbce7 27-28,38-39,49-50,60-61,71-72,82,93-94
+README.zh-CN.md
+  4e3d1b01960cbce7 18-23,82-84,221-222,228-236
+templates/specify/agent-prompts/testcases.md
+  4e3d1b01960cbce7 1-25
+package.json
+  4e3d1b01960cbce7 3
+skills/sdd-run/SKILL.md
+  4e3d1b01960cbce7 3,7,9-10,14-18,29,32,41-45,47-61,63,68,70,75,116,132-134,139,141,143-144,146,148,150-156,158-159,161-164,166-167,169-173,175,177,179-185,187-188,190-191,193-194,196-200,202,204,206-212,214-215,217-221,223-224,226-230,232,234,236-242,244-245,247-251,253-254,256-260,262,268-297,299,301,303,305,307,309-311,313,315-317,319-396,398,400-405,407,409-415,417-418,420-423,425-426,428-429,431-432,434-437,440,442,444-445,448-453,455,457-463,465-466,468-469,471-472,474,476-485,487,489,498,505-517,528-531,543-544,548-549,555,557,559-562,564,566-587,593-610,612,618-624
+templates/specify/agent-prompts/review-a.md
+  4e3d1b01960cbce7 1-73
+templates/specify/agent-prompts/plan.md
+  4e3d1b01960cbce7 1-32
+skills/sdd-testcases/SKILL.md
+  4e3d1b01960cbce7 11-19
+templates/specify/agent-prompts/review-b.md
+  4e3d1b01960cbce7 1-73
+skills/sdd-specify/SKILL.md
+  4e3d1b01960cbce7 11-19
+templates/specify/agent-prompts/implement.md
+  4e3d1b01960cbce7 1-35
+src/installer.js
+  4e3d1b01960cbce7 52-58,204-207
+.claude-plugin/marketplace.json
+  4e3d1b01960cbce7 8
+CHANGELOG.md
+  4e3d1b01960cbce7 5-27
+templates/specify/agent-prompts/tasks.md
+  4e3d1b01960cbce7 1-33
+skills/sdd-review/SKILL.md
+  4e3d1b01960cbce7 16-24,54,72-75,142,323,325,365,369,373-374,407,429-431,445,466,470-481,506-514
+.claude-plugin/plugin.json
+  4e3d1b01960cbce7 4
+README.md
+  4e3d1b01960cbce7 18-23,82-84,229-230,236-244
+skills/sdd-implement/SKILL.md
+  4e3d1b01960cbce7 11-19
+templates/specify/agent-prompts/arbitrate.md
+  4e3d1b01960cbce7 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "ec1119a0f6c5262fb8242734f69632939a558716",
+  "prompts": {
+    "4e3d1b01960cbce7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70df5895-fd7a-4f2e-b11a-4b6dd73858e8",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 1106,
+      "total_deletions": 528,
+      "accepted_lines": 1104,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/3b87525175ad611a2988dde57272575e01cf7b19d54a189ad820020c38ffcd23"
+    },
+    "dd1715e7a929a153": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f67e8b47-0603-4216-a723-292d603a398d",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 217,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c52ec28ac0037beabf555243a00b12b1bb56fd800aba77f0d7cdb63627dbaffc"
+    }
+  }
+}
