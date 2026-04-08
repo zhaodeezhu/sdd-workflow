@@ -49,6 +49,13 @@ async function install(targetDir, options = {}) {
       target: path.join(targetDir, '.specify'),
       type: 'specify',
     },
+    // Agent prompt templates for v4 Agent-Per-Phase architecture
+    {
+      description: 'Agent Prompt Templates',
+      source: path.join(TEMPLATES_DIR, 'specify', 'agent-prompts'),
+      target: path.join(targetDir, '.specify', 'templates', 'agent-prompts'),
+      type: 'agent-prompts',
+    },
     // Team configuration
     {
       description: 'Team Configuration',
@@ -192,6 +199,11 @@ async function updateInstall(targetDir, options = {}) {
       description: 'SDD Templates & Scripts',
       source: path.join(TEMPLATES_DIR, 'specify'),
       target: path.join(targetDir, '.specify'),
+    },
+    {
+      description: 'Agent Prompt Templates',
+      source: path.join(TEMPLATES_DIR, 'specify', 'agent-prompts'),
+      target: path.join(targetDir, '.specify', 'templates', 'agent-prompts'),
     },
     {
       description: 'Team Configuration',

@@ -1,52 +1,35 @@
 ---
 name: sdd-run
-description: SDD v3 全自动执行流水线 - 先需求澄清，再自主运行规划器→生成器→评估器循环，人类只验证最终结果
+description: SDD v4 全自动执行流水线 - Agent-Per-Phase 架构，每个阶段独立 Agent 执行，主进程轻量编排，评审全 5 分制
 invocable: true
 ---
 
-# SDD Run - 全自动执行流水线
+# SDD Run v4 — Agent-Per-Phase 全自动流水线
 
-> **受 Anthropic Harness 设计启发**：将规划（Planner）、生成（Generator）、评估（Evaluator）三角色合一，
-> 形成自主闭环。人类只提供初始需求，只验证最终结果。
-
-一次性自动执行完整的 SDD 流程：`specify → testcases → plan → tasks → implement → review`，
-无需人类在中间步骤确认。评审不通过自动迭代修复，最多 3 轮。
+> **v4 核心改进**：每个阶段由独立 Agent 执行（独立上下文窗口），主进程只做轻量编排。
+> 评审全 5 分制，评审 Agent 只写文件，仲裁读文件综合评判。
 
 ## 核心原则
 
-1. **自主执行**：中间步骤不需要人类确认，自动推进
-2. **文件驱动**：各阶段通过文件产物传递上下文，不依赖人类传话
-3. **自动迭代**：评审不通过时自动修复并重新评审
-4. **人类主权**：L3 级问题（方向性错误）暂停等待人类决策
-5. **幂等恢复**：产出文件实时保存，中断后可从指定阶段继续
+1. **Agent 隔离**：每个阶段独立 Agent，独立上下文窗口，不累积上下文
+2. **文档驱动**：Agent 之间通过文件产物传递上下文，主进程不读文档内容
+3. **评审严格**：全部维度 5 分 + 0 确认问题 = PASS，否则 ITERATE
+4. **评审隔离**：每个评审 Agent 只写报告文件，仲裁 Agent 从文件读取综合评判
+5. **人类主权**：Phase 0 需求澄清是唯一人类交互，L3 问题暂停等人类决策
 
 ## 前置条件
 
 - 项目宪法: `.specify/memory/constitution.md`
 - 项目配置: `CLAUDE.md`
-- 如果是已有功能迭代：已有 `.specify/specs/{feature_id}/` 目录
 
 ## 输入格式
 
 ```
 /sdd-run {feature_id} {功能描述或知识库链接}
-/sdd-run {feature_id} --from {stage}     # 从指定阶段恢复执行
+/sdd-run {feature_id} --from {stage}     # 从指定阶段恢复
 ```
 
-**feature_id 命名规范**：
-
-- **格式**: 三位数字编号，从 `001` 开始自增（如 `001`, `002`, `003`...）
-- **目录命名**: `{feature_id}-{feature-name}/`（如 `001-user-auth/`, `002-data-export/`）
-- **自动确定编号**: 如果用户未指定 feature_id，扫描 `.specify/specs/` 下已有目录，取最大编号 + 1
-- **feature-name**: 英文小写，中划线分隔，简短概括功能
-
-**示例**：
-```
-/sdd-run 004 新增版本对比功能
-/sdd-run 004 https://知识库URL/需求文档
-/sdd-run 004 --from implement            # 从实现阶段继续
-/sdd-run 新增导出功能                    # 自动确定下一个编号
-```
+**feature_id 命名规范**：三位数字编号自增（001, 002, 003...），目录格式 `{id}-{name}/`
 
 ---
 
@@ -55,53 +38,41 @@ invocable: true
 ### 总体架构
 
 ```
-人类输入: "/sdd-run 004 新增XX功能"
-         │
-         ▼
-┌──────────────────────────────────────────────┐
-│  Phase 0: 需求澄清（唯一的人类交互环节）        │
-│    分析需求 → 一次性提出所有澄清问题             │
-│    → 人类回答 → 确认无误 → 进入全自动           │
-│         │                                     │
-│         ▼  ⛔ 此后全自动，不再打扰人类           │
-│  Phase A: 规划器（Planner）                    │
-│    A1. specify → A2. testcases →              │
-│    A3. plan → A4. tasks                       │
-│         │                                     │
-│         ▼                                     │
-│  Phase B: 生成器（Generator）                  │
-│    B1. implement（全自动）                     │
-│         │                                     │
-│         ▼                                     │
-│  Phase C: 评估器（MACE 多Agent竞争评审）        │
-│    C1. 并行派发 3 个评审 Agent                  │
-│    ├─ A:严苛审查员 → 功能+代码质量              │
-│    ├─ B:需求守护者 → 需求+边界处理              │
-│    └─ C:集成检查员 → 集成+架构合规              │
-│    C2. 仲裁合并 → 不通过？                      │
-│         │          │                          │
-│         │          ▼                          │
-│         │    自动修复 → 重新派发3个Agent         │
-│         │          （最多3轮）                  │
-│         ▼                                     │
-│  输出最终报告 ──→ 人类验证                      │
-└──────────────────────────────────────────────┘
+主进程（轻量编排器）
+│  职责：派发 Agent、检查文件存在、读结论行、控制迭代
+│  不读文档内容、不累积上下文
+│
+├── Phase 0: 需求澄清（主进程 — 唯一人类交互）
+│
+├── Agent: Specify → spec.md
+├── Agent: Testcases → testcases.md
+├── Agent: Plan → plan.md
+├── Agent: Tasks → tasks.md
+│
+├── Agent: Implement（不拆分，内部严格串行）
+│
+├── 评审循环（最多 3 轮）：
+│   ├── Agent: Review-A → reviews/r{n}/agent-a.md     ─┐
+│   ├── Agent: Review-B → reviews/r{n}/agent-b.md      │ 并行
+│   ├── Agent: Review-C → reviews/r{n}/agent-c.md     ─┘
+│   ├── Agent: Arbitrate → reviews/r{n}/arbitrate.md
+│   │   ├── PASS → reviews/summary.md → 结束
+│   │   └── ITERATE → reviews/r{n}/fix-directives.md
+│   │       └── Agent: Fix → 回到评审循环
+│
+└── 最终报告 → 人类验收
 ```
 
 ---
 
-### Phase 0: 需求澄清（Requirement Clarification）
+### Phase 0: 需求澄清（主进程执行）
 
-> **全流程中唯一的人类交互环节**。澄清完成后进入全自动模式，不再打扰人类。
-
-**目标**：在动手之前，一次性把所有不确定的点问清楚，避免后期返工。
-
-**执行流程**：
+> 全流程中唯一的人类交互环节。
 
 #### 0.1 需求预分析
 
 1. **解析输入**：提取功能名称、描述、知识库链接（如有）
-2. **获取知识库文档**（如有链接）：如果项目配置了知识库 MCP（如 Confluence），使用对应工具获取原始需求
+2. **获取知识库文档**（如有链接）：如果项目配置了知识库 MCP 工具（如 Confluence），使用对应工具获取原始需求
 3. **读取项目上下文**：
    - `.specify/memory/constitution.md`（技术栈约束）
    - `CLAUDE.md`（项目配置）
@@ -142,7 +113,7 @@ invocable: true
 - **一次性提问**：把所有问题集中在一轮提出，不要多轮追问
 - **给出默认选项**：每个问题尽量提供 2-3 个候选答案，人类可以直接选择
 - **标注优先级**：关键问题标注 [必答]，次要问题标注 [可选]
-- **已有答案不问**：文档或现有代码中已明确的信息不重复确认
+- **已有答案不问**：知识库文档或现有代码中已明确的信息不重复确认
 - **最少问题原则**：如果预分析后没有不确定项，直接说明"无需澄清"并进入全自动
 
 #### 0.4 澄清完成
@@ -158,206 +129,364 @@ invocable: true
   - {要点2}
   - ...
 
-🚀 开始全自动执行，预计产出 spec → testcases → plan → tasks → implement → review
-过程中如有 L3 级方向性问题会暂停，否则一路到底。
+🚀 开始全自动执行（v4 Agent-Per-Phase 架构）
+  每个阶段由独立 Agent 执行，评审全 5 分制。
+  过程中如有 L3 级方向性问题会暂停，否则一路到底。
 ```
 
 ---
 
-### Phase A: 规划器（Planner）
+### Phase A: 规划器（4 个串行 Agent）
 
-目标：从需求到完整的开发计划，全自动生成。
+每个 Agent 独立派发，独立上下文窗口。Agent 完成后主进程只检查文件是否存在。
 
-#### A1. 生成功能规格（specify）
+> **关键**：每个 Agent 的 prompt 告诉它"先读指令文件，再按指令执行"。
+> 指令文件路径：`.specify/templates/agent-prompts/{stage}.md`
 
-**读取**：
-- 用户提供的功能描述或知识库链接
-- `.specify/memory/constitution.md`
-- `CLAUDE.md`
-- 如果有知识库链接：使用已配置的知识库 MCP 工具获取原文
+#### A1. Agent: Specify
 
-**执行**：
-1. 解析用户输入，提取功能名称、描述、知识库链接
-2. 如有知识库链接，获取原始需求并保存到 `requirements/original.md`
-3. 读取相关现有 spec（同模块的其他 spec）
-4. 生成 spec.md，包含：
-   - 用户故事 + 验收标准（Gherkin 格式）
-   - 功能需求列表
-   - 界面需求（ASCII 示意）
-   - 边界条件
-   - **功能分组与完成定义**（SDD v2 新增）
-5. 保存到 `.specify/specs/{feature_id}/spec.md`
+使用 Agent 工具派发：
 
-**产物**：`spec.md`
+```python
+Agent(
+    name = "sdd-specify",
+    subagent_type = "general-purpose",
+    description = "SDD-Specify",
+    prompt = """
+你是 SDD 功能规格生成器。
 
-**跳过确认**：直接进入下一步。
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/specify.md
 
-**自动拆分检查**：spec.md 保存后，检查文件行数。超过 500 行时，自动执行 `/sdd-split spec {feature_id} --auto`。
+第二步：按指令执行，需要读取的项目文件：
+- .specify/memory/constitution.md
+- CLAUDE.md
+- .specify/specs/{feature_id}/requirements/clarification.md（如有）
 
-#### A2. 生成测试用例（testcases）
+第三步：将功能规格写入：
+.specify/specs/{feature_id}/spec.md
 
-**读取**：上一步的 `spec.md`
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"spec.md 已保存"。
+"""
+)
+```
 
-**执行**：
-1. 从 spec 提取用户故事、验收标准、边界条件
-2. 设计测试用例（UT/IT/API/FT/ST/E2E/B）
-3. 生成 testcases.md
-4. 如果发现 spec 描述模糊（无法写 Given-When-Then），按 L2 反馈补充 spec
+**主进程检查**：确认 `.specify/specs/{feature_id}/spec.md` 文件已生成
 
-**产物**：`testcases.md`
+#### A2. Agent: Testcases
 
-#### A3. 生成技术计划（plan）
+```python
+Agent(
+    name = "sdd-testcases",
+    subagent_type = "general-purpose",
+    description = "SDD-Testcases",
+    prompt = """
+你是 SDD 测试用例设计器。
 
-**读取**：`spec.md` + `testcases.md`
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/testcases.md
 
-**执行**：
-1. 分析现有代码结构（参考 CLAUDE.md 和 constitution.md）
-2. 设计架构方案（参考 constitution.md 中的架构模式）
-3. 生成 plan.md，包含：
-   - 数据模型设计（DDL）
-   - API 设计（URL、参数、响应格式）
-   - 前后端实现设计
-   - **阶段合约**（每个 Phase 的交付物 + 验证标准 + 质量阈值）
-4. 如果发现需求技术上不可行，按 L3 暂停等待人类
+第二步：按指令执行，需要读取的项目文件：
+- .specify/specs/{feature_id}/spec.md
 
-**产物**：`plan.md`
+第三步：将测试用例写入：
+.specify/specs/{feature_id}/testcases.md
 
-**自动拆分检查**：plan.md 保存后，检查文件行数。超过 1000 行时，自动执行 `/sdd-split plan {feature_id} --auto`。
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"testcases.md 已保存"。
+"""
+)
+```
 
-#### A4. 生成任务分解（tasks）
+**主进程检查**：确认 `testcases.md` 文件已生成
 
-**读取**：`spec.md` + `testcases.md` + `plan.md`
+#### A3. Agent: Plan
 
-**执行**：
-1. 基于 plan 的技术方案分解为可执行任务
-2. 建立测试-实现映射（测试任务先行）
-3. 生成 tasks.md
-4. 如果 plan 有遗漏（缺接口/组件），按 L1 自动补充
+```python
+Agent(
+    name = "sdd-plan",
+    subagent_type = "general-purpose",
+    description = "SDD-Plan",
+    prompt = """
+你是 SDD 技术计划生成器。
 
-**产物**：`tasks.md`
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/plan.md
 
-**自动拆分检查**：tasks.md 保存后，检查文件行数。超过 800 行时，自动执行 `/sdd-split tasks {feature_id} --auto`。
+第二步：按指令执行，需要读取的项目文件：
+- .specify/specs/{feature_id}/spec.md
+- .specify/specs/{feature_id}/testcases.md
+- .specify/memory/constitution.md
+- CLAUDE.md
+
+第三步：将技术计划写入：
+.specify/specs/{feature_id}/plan.md
+
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"plan.md 已保存"。
+"""
+)
+```
+
+**主进程检查**：确认 `plan.md` 文件已生成
+
+#### A4. Agent: Tasks
+
+```python
+Agent(
+    name = "sdd-tasks",
+    subagent_type = "general-purpose",
+    description = "SDD-Tasks",
+    prompt = """
+你是 SDD 任务分解生成器。
+
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/tasks.md
+
+第二步：按指令执行，需要读取的项目文件：
+- .specify/specs/{feature_id}/spec.md
+- .specify/specs/{feature_id}/testcases.md
+- .specify/specs/{feature_id}/plan.md
+- .specify/memory/constitution.md
+
+第三步：将任务分解写入：
+.specify/specs/{feature_id}/tasks.md
+
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"tasks.md 已保存"。
+"""
+)
+```
+
+**主进程检查**：确认 `tasks.md` 文件已生成
 
 **Planner 完成标志**：四份文件均已保存到 `.specify/specs/{feature_id}/`
 
 ---
 
-### Phase B: 生成器（Generator）
+### Phase B: 执行器（1 个 Agent，不拆分）
 
-目标：按计划自动编写代码，不逐任务确认。
+```python
+Agent(
+    name = "sdd-implement",
+    subagent_type = "general-purpose",
+    description = "SDD-Implement",
+    prompt = """
+你是 SDD 任务执行器。
 
-**读取**：`spec.md` + `testcases.md` + `plan.md` + `tasks.md`
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/implement.md
 
-#### B1. 自动实现（implement）
+第二步：按指令执行，需要读取的项目文件：
+- .specify/specs/{feature_id}/spec.md
+- .specify/specs/{feature_id}/testcases.md
+- .specify/specs/{feature_id}/plan.md
+- .specify/specs/{feature_id}/tasks.md
+- .specify/memory/constitution.md
 
-**执行流程**：
+第三步：严格按照 tasks.md 中的 Phase 0→1→2→3 顺序执行所有任务。
 
-1. **加载任务文档**：读取 tasks.md，获取所有 Phase 和任务列表
-2. **逐 Phase 执行**：
-   - Phase 1（后端）→ Phase 2（前端）→ Phase 3（测试验收）
-   - 每个 Phase 内逐任务执行
-3. **每个任务**：
-   - 读取任务描述和关联的文件路径
-   - 编写/修改代码
-   - 更新 tasks.md 中的任务状态
-4. **Phase 完成后自动合约自检**：
-   - 对照 plan.md 中的阶段合约
-   - 检查交付物是否齐全
-   - 自检失败则自动修复，最多 3 轮
-5. **反馈处理**：
-   - L1（方案调整）：自动修正 plan/tasks + 代码，记录 CR
-   - L2（需求漏洞）：自动补充 spec + 级联更新，记录 CR
-   - L3（方向性错误）：**暂停，输出影响分析，等待人类决策**
+重要纪律：
+- 必须按步骤执行，不跳步
+- 每完成一个 Task 立即更新 tasks.md 状态
+- 不要 git commit
+- 完成后只回复"实现完成，共修改 N 个文件"。
+"""
+)
+```
 
-**关键差异**（对比手动 sdd-implement）：
-- 跳过"每完成一个任务等待确认"
-- 跳过"每个 Phase 完成后提示用户运行 review"
-- 反馈自动处理，不等待人类指令
-- 使用 `auto` 模式的行为：遇错暂停修复后继续
+**关键**：执行器不拆分为多个 Agent。一个 Agent 内部严格串行执行所有 Phase，保证文件不错乱。
 
-**产物**：已实现的代码文件 + 更新的 tasks.md
+**主进程检查**：确认 `tasks.md` 中的任务状态已更新（`grep -c "✅" tasks.md`）
 
 ---
 
-### Phase C: 评估器（MACE 多Agent竞争评审）
+### Phase C: 评审循环
 
-目标：3 个独立 Agent 并行评审代码质量，仲裁合并后不通过则自动迭代。
+#### C1. 确定评审范围和代码文件列表
 
-**读取**：`spec.md` + `plan.md` + `testcases.md` + `constitution.md` + 所有已实现的代码文件
+主进程收集已修改的代码文件列表：
+- 从 `git diff --name-only` 获取变更文件
+- 或从 `tasks.md` 的执行记录中提取
 
-> **核心改变**: 评估器不再是单 Agent 自审自评，而是派发 3 个独立 Agent 并行评审。
-> 每个 Agent 拥有独立上下文窗口，看不到 Generator 的思考过程。
+#### C2. 创建评审目录
 
-#### C1. 并行派发评审 Agent
-
-使用 Agent 工具同时派发 3 个独立评审 Agent：
-
-| Agent | 角色 | 审查维度 | 输入上下文 |
-|-------|------|----------|------------|
-| A: 严苛审查员 | 找出所有代码问题 | 功能完整性 + 代码质量 | spec + plan + 代码 |
-| B: 需求守护者 | 代表最终用户 | 需求一致性 + 边界处理 | spec + testcases + 代码 |
-| C: 集成检查员 | 端到端验证 | 集成完整性 + 架构合规 | plan + testcases + 代码 + constitution |
-
-每个 Agent 的详细 prompt 模板和输出格式，参照 `sdd-review` skill 的「执行步骤 → 3. 并行派发 3 个评审 Agent」。
-
-**Agent 派发要点**：
-1. 将文档内容直接注入 Agent prompt（而非仅传路径），确保 Agent 独立上下文完整
-2. 3 个 Agent **必须并行派发**（单个消息中包含 3 个 Agent 工具调用）
-3. 每个 Agent 输出结构化评审结果（评分 + 问题清单 + 合约检查 + 亮点）
-
-#### C2. 仲裁合并
-
-收集 3 个 Agent 结果后执行仲裁：
-
-1. **问题去重与确认**：
-   - ≥2 个 Agent 报告的相似问题 → 确认（提升一级严重度）
-   - 仅 1 个 Agent 报告 → 待确认（保持原始严重度）
-2. **评分聚合**：每个维度取对应 Agent 的评分
-3. **合约检查合并**：取并集（任一 Agent FAIL → 该合约项 FAIL）
-
-仲裁合并的详细规则，参照 `sdd-review` skill 的「执行步骤 → 4. 仲裁合并」。
-
-#### C3. 评审结论判定
-
-```
-评审结果判定：
-  功能完整性 ≥ 4 AND 需求一致性 ≥ 4 AND 无确认的 HIGH 问题
-    → PASS → 输出最终报告
-
-  否则
-    → ITERATE → 自动修复 → 重新派发 3 个 Agent（回到 C1）
-    → 最多 3 轮，超过则暂停等待人类
+```bash
+mkdir -p .specify/specs/{feature_id}/reviews/r{n}
 ```
 
-**自动修复流程**：
-1. 从仲裁后的评审报告中提取确认问题清单
-2. 按确认人数排序：≥2 个 Agent 确认的优先修复
-3. 按严重度排序：HIGH → MEDIUM → LOW
-4. 逐一修复代码
-5. 修复完成后重新执行 C1-C2（重新派发 3 个 Agent）
+#### C3. 并行派发 3 个评审 Agent
 
-#### C4. 保存评审报告
+> **3 个 Agent 必须在同一条消息中并行派发**
 
-> **硬性要求**: 评审报告 **必须** 保存为文件，不能只在终端展示。
+```python
+# Agent A: 严苛审查员
+Agent(
+    name = "review-a",
+    subagent_type = "general-purpose",
+    description = "SDD评审-严苛审查员",
+    prompt = """
+你是极其严苛的代码审查专家。
 
-**每轮评审结束后**（无论 PASS 还是 ITERATE），都**必须**执行以下保存操作：
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/review-a.md
 
-1. **使用 Write 工具**保存评审报告到：
-   ```
-   .specify/specs/{feature_id}/review-{phase}-r{n}.md
-   ```
-   报告内容包含：总评、各维度评分、硬阈值检查、合约检查、问题清单、Agent 评审详情、变更记录。
-   报告格式参见 `sdd-review` skill 的「5.1 生成报告内容」。
+第二步：读取需要审查的文件：
+- .specify/specs/{feature_id}/spec.md
+- .specify/specs/{feature_id}/plan.md
+- {代码文件列表，每行一个}
 
-2. **使用 Read 工具**读取刚保存的文件，确认内容完整。如果保存失败，重试一次。
+第三步：将评审报告写入：
+.specify/specs/{feature_id}/reviews/r{n}/agent-a.md
 
-3. **当评审结论为 PASS 时**，额外使用 Write 工具保存评审总结到：
-   ```
-   .specify/specs/{feature_id}/review-summary.md
-   ```
-   总结格式参见 `sdd-review` skill 的「5.4 生成并保存评审总结」。
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"agent-a.md 已保存"。
+"""
+)
 
-> ⚠️ **不可跳过**: 评审报告的保存是执行流程中的必经步骤，不是可选项。每一轮评审都必须有对应的文件产物。
+# Agent B: 需求守护者
+Agent(
+    name = "review-b",
+    subagent_type = "general-purpose",
+    description = "SDD评审-需求守护者",
+    prompt = """
+你是最终用户的代言人。
+
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/review-b.md
+
+第二步：读取需要审查的文件：
+- .specify/specs/{feature_id}/spec.md
+- .specify/specs/{feature_id}/testcases.md
+- {代码文件列表，每行一个}
+
+第三步：将评审报告写入：
+.specify/specs/{feature_id}/reviews/r{n}/agent-b.md
+
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"agent-b.md 已保存"。
+"""
+)
+
+# Agent C: 集成检查员
+Agent(
+    name = "review-c",
+    subagent_type = "general-purpose",
+    description = "SDD评审-集成检查员",
+    prompt = """
+你是系统集成专家。
+
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/review-c.md
+
+第二步：读取需要审查的文件：
+- .specify/specs/{feature_id}/plan.md
+- .specify/specs/{feature_id}/testcases.md
+- .specify/memory/constitution.md
+- {代码文件列表，每行一个}
+
+第三步：将评审报告写入：
+.specify/specs/{feature_id}/reviews/r{n}/agent-c.md
+
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"agent-c.md 已保存"。
+"""
+)
+```
+
+#### C4. 检查评审报告文件
+
+主进程确认 3 个报告文件都已生成：
+```
+.specify/specs/{feature_id}/reviews/r{n}/agent-a.md
+.specify/specs/{feature_id}/reviews/r{n}/agent-b.md
+.specify/specs/{feature_id}/reviews/r{n}/agent-c.md
+```
+
+#### C5. 派发仲裁 Agent
+
+```python
+Agent(
+    name = "sdd-arbitrate",
+    subagent_type = "general-purpose",
+    description = "SDD-仲裁",
+    prompt = """
+你是评审仲裁器。
+
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/arbitrate.md
+
+第二步：读取 3 份评审报告：
+- .specify/specs/{feature_id}/reviews/r{n}/agent-a.md
+- .specify/specs/{feature_id}/reviews/r{n}/agent-b.md
+- .specify/specs/{feature_id}/reviews/r{n}/agent-c.md
+
+第三步：执行仲裁，将结果写入：
+- .specify/specs/{feature_id}/reviews/r{n}/arbitrate.md
+
+如果结论为 ITERATE，额外写入修复指令：
+- .specify/specs/{feature_id}/reviews/r{n}/fix-directives.md
+
+如果结论为 PASS，额外写入评审总结：
+- .specify/specs/{feature_id}/reviews/summary.md
+
+重要：你必须使用 Write 工具保存文件，不要只输出到终端。
+完成后只回复"arbitrate.md 已保存，结论: PASS/ITERATE"。
+"""
+)
+```
+
+#### C6. 读取仲裁结论
+
+主进程只读取 `arbitrate.md` 的结论行：
+
+```bash
+grep "结论:" .specify/specs/{feature_id}/reviews/r{n}/arbitrate.md
+```
+
+**判定规则**：
+- 所有维度 = 5 且 0 个确认问题 → **PASS**
+- 否则 → **ITERATE**
+
+- **PASS** → 生成最终报告，流程结束
+- **ITERATE** → 进入 C7
+
+#### C7. 派发修复 Agent（ITERATE 时）
+
+```python
+Agent(
+    name = "sdd-fix",
+    subagent_type = "general-purpose",
+    description = "SDD-修复",
+    prompt = """
+你是评审修复执行器。
+
+第一步：读取你的执行指令文件：
+.specify/templates/agent-prompts/fix.md
+
+第二步：读取修复指令：
+.specify/specs/{feature_id}/reviews/r{n}/fix-directives.md
+
+参考文件（按需读取）：
+- .specify/specs/{feature_id}/plan.md
+
+第三步：按指令逐项修复代码。
+
+重要纪律：
+- 严格按照修复指令修复，不做额外改动
+- 不要修改 spec/testcases/plan/tasks 文档
+- 不要 git commit
+- 完成后只回复"修复完成，共修复 N 项"。
+"""
+)
+```
+
+修复完成后，回到 C2（创建 `r{n+1}` 目录，重新派发 3 个评审 Agent）。
+
+#### 迭代限制
+
+最多 3 轮评审。超过 3 轮仍未 PASS → 暂停，输出影响分析，等待人类决策。
 
 ---
 
@@ -366,23 +495,26 @@ invocable: true
 全自动流水线完成后，输出执行报告：
 
 ```
-━━━ SDD v3 执行报告 ━━━
+━━━ SDD v4 执行报告 ━━━
 
 功能: {feature_id} - {功能名称}
 执行时间: {start} ~ {end}
 迭代轮次: {n}
 
 📋 产出文件:
-  ✅ spec.md ({版本})
-  ✅ testcases.md ({N} 个测试场景)
-  ✅ plan.md ({N} Phase, {N} 合约项)
-  ✅ tasks.md ({N} 个任务)
+  ✅ spec.md
+  ✅ testcases.md
+  ✅ plan.md
+  ✅ tasks.md
+  ✅ reviews/summary.md
 
-📊 最终评审（MACE 多Agent竞争评审）:
-  功能完整性: {n}/5 (A-严苛审查员) | 需求一致性: {n}/5 (B-需求守护者)
-  代码质量: {n}/5 (A-严苛审查员) | 边界处理: {n}/5 (B-需求守护者)
-  集成完整性: {n}/5 (C-集成检查员)
-  确认问题: {N}项 | 待确认问题: {N}项
+📊 最终评审（MACE 全5分制）:
+  功能完整性: 5/5 (A-严苛审查员)
+  需求一致性: 5/5 (B-需求守护者)
+  代码质量: 5/5 (A-严苛审查员)
+  边界处理: 5/5 (B-需求守护者)
+  集成完整性: 5/5 (C-集成检查员)
+  架构合规: 5/5 (C-集成检查员)
   结论: PASS
 
 📝 变更文件:
@@ -393,28 +525,13 @@ invocable: true
   Round 1: ITERATE - {问题摘要} → {修复摘要}
   Round 2: PASS
 
-📋 CR 记录:
-  CR-001: {变更摘要} ({级别})
-
-⏸ 暂停项:
-  {无 / 列出L3暂停项}
+📁 评审文件:
+  reviews/r1/ — 第 1 轮评审（agent-a/b/c.md, arbitrate.md, fix-directives.md）
+  reviews/r2/ — 第 2 轮评审（agent-a/b/c.md, arbitrate.md）
+  reviews/summary.md — 评审总结
 
 请验收以上结果。如需修改，告诉我具体问题。
 ```
-
-### 通知发送（最终必经步骤）
-
-> **必须在最终输出完成后执行，不可跳过。**
-
-最终报告输出完成后，**立即执行**以下通知发送流程：
-
-1. 检查 `.specify/notification.json` 是否存在
-2. 如果存在且 `enabled` 不为 false，**立即调用** `/sdd-notify run-complete {feature_id}`
-   - 从上下文传入参数：功能ID、功能名称、执行状态、迭代轮次、评审评分、变更文件统计
-3. 如果配置文件不存在或 `enabled=false`，跳过此步骤（不输出警告）
-
-> 通知是附加功能，任何通知失败不影响主工作流。详见 `/sdd-notify`。
-> 但通知发送**动作本身不可省略**——必须检查配置并尝试发送，不能因为"可能不需要"就跳过检查。
 
 ---
 
@@ -422,54 +539,86 @@ invocable: true
 
 ### `--from` 参数
 
-支持从指定阶段开始，跳过已完成的步骤：
-
 ```
-/sdd-run 004 --from specify     # 从规格开始（跳过已有的前置准备）
-/sdd-run 004 --from testcases   # 已有 spec，从测试用例开始
+/sdd-run 004 --from specify     # 从规格开始
+/sdd-run 004 --from testcases   # 已有 spec
 /sdd-run 004 --from plan        # 已有 spec + testcases
 /sdd-run 004 --from tasks       # 已有 spec + testcases + plan
 /sdd-run 004 --from implement   # 已有完整计划，只执行实现
-/sdd-run 004 --from review      # 已实现，只执行评审
+/sdd-run 004 --from review      # 已实现，从 r1 开始评审
+/sdd-run 004 --from fix         # 从修复继续（自动检测轮次）
 ```
 
 **恢复逻辑**：
 1. 检查指定阶段的前置文件是否存在
 2. 缺少前置文件时报错并提示需要先完成的阶段
-3. 从指定阶段开始自动执行后续所有阶段
+3. 从指定阶段开始派发 Agent
 
-### L3 暂停恢复
+### 评审恢复
 
-当遇到 L3 级别问题时，流程暂停并输出：
-- 阻塞原因和影响分析
-- 建议的处理方案（可选）
-- 当前已完成阶段和产出文件
+`--from review` 时：
+1. 检查 `reviews/` 目录下已有的轮次
+2. 如果最新的 `arbitrate.md` 结论为 ITERATE，从修复继续
+3. 如果没有评审记录，从 r1 开始
 
-人类决策后，可通过 `/sdd-run {feature_id} --from {stage}` 继续。
+---
+
+## 文件产出结构
+
+```
+.specify/specs/{feature_id}/
+├── requirements/
+│   ├── original.md              # 知识库原始需求（如有）
+│   └── clarification.md         # 需求澄清记录
+├── spec.md                      # 功能规格
+├── testcases.md                 # 测试用例
+├── plan.md                      # 技术计划
+├── tasks.md                     # 任务分解
+└── reviews/                     # 评审专用文件夹
+    ├── r1/                      # 第 1 轮评审
+    │   ├── agent-a.md           # 严苛审查员报告
+    │   ├── agent-b.md           # 需求守护者报告
+    │   ├── agent-c.md           # 集成检查员报告
+    │   ├── arbitrate.md         # 仲裁报告
+    │   └── fix-directives.md    # 修复指令（ITERATE 时）
+    ├── r2/                      # 第 2 轮（如需要）
+    │   └── ...
+    └── summary.md               # 最终评审总结（PASS 后生成）
+```
 
 ---
 
 ## 与现有 Skill 的关系
 
-| 现有 Skill | sdd-run 中的角色 | 变更 |
-|-----------|-----------------|------|
-| sdd-specify | Planner A1 | 不修改，sdd-run 内部执行等价逻辑 |
-| sdd-testcases | Planner A2 | 不修改，sdd-run 内部执行等价逻辑 |
-| sdd-plan | Planner A3 | 不修改，sdd-run 内部执行等价逻辑 |
-| sdd-tasks | Planner A4 | 不修改，sdd-run 内部执行等价逻辑 |
-| sdd-implement | Generator B1 | 不修改，sdd-run 内部执行等价逻辑 |
-| sdd-review | Evaluator C1-C2（MACE多Agent） | 不修改，sdd-run 内部执行等价逻辑（3 Agent并行派发+仲裁） |
-| sdd-notify | 通知组件 | 不修改，sdd-run 在最终输出后自动调用 |
+> **单一真相源架构**：Skill 文件（`.claude/skills/sdd-*/SKILL.md`）是领域逻辑的唯一真相源。
+> Agent prompt（`.specify/templates/agent-prompts/*.md`）是薄壳，引用 Skill 文件获取领域规则，只补充输入/输出路径和 Agent 执行约束。
 
-现有 6 个 skill 继续可用，支持手动逐步执行。`sdd-run` 是纯编排层。
+| Skill | Agent 模式用途 | 手动模式用途 |
+|-------|--------------|-------------|
+| sdd-specify | Specify Agent 读取领域规则 | `/sdd-specify` 交互式执行 |
+| sdd-testcases | Testcases Agent 读取领域规则 | `/sdd-testcases` 交互式执行 |
+| sdd-plan | Plan Agent 读取领域规则 | `/sdd-plan` 交互式执行 |
+| sdd-tasks | Tasks Agent 读取领域规则 | `/sdd-tasks` 交互式执行 |
+| sdd-implement | Implement Agent 读取执行流程 | `/sdd-implement` 交互式执行 |
+| sdd-review | Review/Arbitrate/Fix Agent 读取评审规则 | `/sdd-review` 交互式执行 |
+
+Agent prompt 薄壳存储在 `.specify/templates/agent-prompts/` 目录下：
+- `specify.md` / `testcases.md` / `plan.md` / `tasks.md` — 薄壳，引用对应 Skill
+- `implement.md` — 薄壳，引用 sdd-implement Skill
+- `review-a.md` / `review-b.md` / `review-c.md` — 薄壳，引用 sdd-review Skill + 角色专属输出格式
+- `arbitrate.md` — 薄壳，引用 sdd-review Skill + 仲裁输出格式
+- `fix.md` — 薄壳，引用 sdd-implement + sdd-review Skill + 修复执行步骤
+
+**维护规则**：修改领域逻辑时只需更新 Skill 文件，Agent prompt 自动生效。
 
 ---
 
 ## 注意事项
 
-1. **不跳过质量**：自动不等于降低标准，评审维度和硬阈值不变
-2. **CR 记录完整**：每次自动修正都记录 CR，保持可追溯性
-3. **宪法优先**：所有代码必须符合 `.specify/memory/constitution.md` 约束
-4. **错误处理**：代码编译/lint 错误自动修复，最多重试 3 次
-5. **不自动提交**：代码修改不自动 git commit，由人类验收后决定
-6. **大文档处理**：spec 超过 500 行、plan 超过 1000 行、tasks 超过 800 行时自动拆分（使用 `--auto` 模式）
+1. **不跳过质量**：自动不等于降低标准，全 5 分评审阈值不变
+2. **Agent 隔离**：每个 Agent 独立上下文，不共享对话历史
+3. **主进程轻量**：主进程只检查文件、派发 Agent、读结论行
+4. **文档必存**：所有 Agent 必须用 Write 工具保存文件，不能只输出到终端
+5. **不自动提交**：代码修改不自动 git commit
+6. **宪法优先**：所有代码必须符合 `.specify/memory/constitution.md` 约束
+7. **CR 记录**：自动修正都记录 CR，保持可追溯性

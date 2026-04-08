@@ -1,6 +1,6 @@
 {
   "name": "sdd-workflow",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "SDD (Specification-Driven Development) workflow toolkit for Claude Code - install skills, templates and tooling to any project",
   "bin": {
     "sdd": "./bin/sdd.js",
