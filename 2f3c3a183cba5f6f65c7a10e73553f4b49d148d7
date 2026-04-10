@@ -1,0 +1,38 @@
+package.json
+  f494449044a75c7b 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.10",
+  "base_commit_sha": "2f3c3a183cba5f6f65c7a10e73553f4b49d148d7",
+  "prompts": {
+    "dd1715e7a929a153": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f67e8b47-0603-4216-a723-292d603a398d",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 217,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c52ec28ac0037beabf555243a00b12b1bb56fd800aba77f0d7cdb63627dbaffc"
+    },
+    "f494449044a75c7b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a91ec713-f372-43ca-aad9-bf50e1cbca41",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/31d69b77bc4a74fea0ea290d6734fbdfa309771b40245f5eba32a9e04e3d144c"
+    }
+  }
+}
