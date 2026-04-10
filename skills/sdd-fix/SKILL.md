@@ -449,9 +449,18 @@ Agent 排查详情:
 - **设计缺陷类** → 在 plan.md 中补充遗漏的处理逻辑，记录 CR
 - **编码错误类** → 不更新上游文档
 
+> **所有类型**都必须在 spec.md 的「Iteration Index」中追加本次 bug 修复的反向索引。
+
 #### 3.3 生成 Bug 报告
 
 使用 Write 工具将 Bug 报告保存到 `.specify/specs/{feature_id}/bugs/BUG-{seq}-{slug}.md`。
+
+同时在 `.specify/specs/{feature_id}/iterations/iter-{NNN}-bugfix-{slug}.md` 创建迭代记录，内容格式参见 sdd-run 的迭代文件格式。迭代记录中的「在原文档中的定位」字段必须指明 bug 关联的 spec/plan 具体章节。
+
+**双向索引**：在原 spec.md 末尾的「Iteration Index」表格追加一行：
+```markdown
+| iter-{NNN} | bugfix | {date} | BUG-{seq}: {描述} | [详情](iterations/iter-{NNN}-bugfix-{slug}.md) |
+```
 
 报告内容参考 `templates/specify/templates/bug-report-template.md` 模板，填充实际数据。
 

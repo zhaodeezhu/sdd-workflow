@@ -17,6 +17,8 @@
 2. `.specify/specs/{feature_id}/testcases.md` — 测试用例
 3. 待审查代码文件列表（由主进程提供）
 
+**渐进式文档加载**：读取 spec.md 时，如果文件内容包含「文档已拆分为模块化结构」，说明已拆分。先从索引获取核心信息，然后加载 `spec/user-stories.md` 和 `spec/acceptance-criteria.md` 获取完整的用户故事和验收标准。需求一致性审查必须逐条比对，不可只看索引概要。
+
 ## 评分规则
 
 评分只有两个档位：

@@ -16,6 +16,8 @@
 2. `.specify/specs/{feature_id}/plan.md` — 技术方案（参考）
 3. `.specify/specs/{feature_id}/spec.md` — 功能规格（参考，按需读取）
 
+**渐进式文档加载**：读取 plan.md / spec.md 时，如果文件内容包含「文档已拆分为模块化结构」，说明已拆分。先从索引获取核心信息，然后根据 fix-directives.md 中指出的问题定位，按需加载相关模块。修复工作通常只需加载与问题相关的特定模块。
+
 ## 第三步：逐项修复
 
 按优先级顺序修复：必须修复 → 建议修复，HIGH → MEDIUM → LOW

@@ -126,7 +126,9 @@ Task 2.X-T: 写测试 → Task 2.X: 写实现 → 测试通过
 
 ### 6. 检测文档大小
 
-tasks.md 超过 800 行时，自动执行 `/sdd-split tasks {feature_id} --auto` 拆分（在 sdd-run 中）或提示用户使用 `/sdd-split tasks {feature_id}`（手动模式下）。
+tasks.md 超过 800 行时：
+- **sdd-run 模式**：主进程在 Tasks Agent 完成后自动检测行数，超阈值则派发 sdd-split Agent 执行 `/sdd-split tasks {feature_id} --auto` 强制拆分为模块化结构，支持下游 Agent 渐进式加载。
+- **手动模式**：提示用户使用 `/sdd-split tasks {feature_id}` 手动拆分。
 
 ### 7. 输出摘要
 向用户展示任务概览和预估工时。

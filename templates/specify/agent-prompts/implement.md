@@ -15,6 +15,8 @@
 4. `.specify/specs/{feature_id}/tasks.md` — 任务分解
 5. `.specify/memory/constitution.md` — 项目宪法（如有）
 
+**渐进式文档加载**：读取上述文档时，如果文件内容包含「文档已拆分为模块化结构」，说明已拆分。先从索引获取核心信息和导航表，然后按当前正在执行的 Task 按需加载对应模块。例如：执行后端任务时加载 `plan/backend-impl.md`；执行前端任务时加载 `plan/frontend-impl.md`。不要一次性加载所有模块。
+
 ## 第三步：执行
 
 按 Skill 文件中的执行流程，严格按照 tasks.md 中的 Phase 0→1→2→3 顺序执行所有任务。

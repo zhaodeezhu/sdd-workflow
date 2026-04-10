@@ -209,12 +209,24 @@ invocable: true
    - 优先级：按 Group 顺序隐含优先级，Group A 最重要
 
 ### 6. 创建功能目录
+
+> **⚠️ 重要**：创建新目录前，必须先执行需求归属判断！
+
+#### 6.1 需求归属判断
+
+1. 扫描 `.specify/specs/` 下已有目录
+2. 判断新需求是否属于已有需求的 bug 修复、小优化或功能增强
+3. 如果是 → **不新建目录**，在原目录下的 `iterations/` 创建迭代记录，并更新原 spec.md 的「Iteration Index」
+4. 如果是全新独立功能 → 新建目录
+
+#### 6.2 新功能目录结构
 ```
 .specify/specs/{feature_id}-{feature-name}/
 ├── requirements/              # 原始需求文档（如果有知识库来源）
 │   ├── original.md           # 原始需求
 │   └── metadata.json         # 文档元数据
 ├── spec.md                   # 功能规格
+├── iterations/               # 迭代记录（bug修复/小优化）
 └── contracts/                # API契约（可选）
 ```
 
@@ -228,7 +240,9 @@ invocable: true
 
 ### 8. 检测文档大小
 
-spec.md 超过 500 行时，自动执行 `/sdd-split spec {feature_id} --auto` 拆分（在 sdd-run 中）或提示用户使用 `/sdd-split spec {feature_id}`（手动模式下）。
+spec.md 超过 500 行时：
+- **sdd-run 模式**：主进程在 Specify Agent 完成后自动检测行数，超阈值则派发 sdd-split Agent 执行 `/sdd-split spec {feature_id} --auto` 强制拆分为模块化结构，支持下游 Agent 渐进式加载。
+- **手动模式**：提示用户使用 `/sdd-split spec {feature_id}` 手动拆分。
 
 ### 9. 交互确认
 向用户展示生成的文档大纲，询问是否需要补充或修改。

@@ -27,9 +27,127 @@ invocable: true
 ```
 /sdd-run {feature_id} {功能描述或知识库链接}
 /sdd-run {feature_id} --from {stage}     # 从指定阶段恢复
+/sdd-run {feature_id} --bugfix {描述}    # 在已有需求目录下记录bug修复（跳过评审）
+/sdd-run {feature_id} --patch {描述}     # 在已有需求目录下记录小优化（跳过评审）
 ```
 
 **feature_id 命名规范**：三位数字编号自增（001, 002, 003...），目录格式 `{id}-{name}/`
+
+### 编号自增规则
+
+所有编号必须在已有基础上自增，**禁止手动指定或跳号**：
+
+1. **spec 目录编号**：扫描 `.specify/specs/` 下已有目录，取最大编号 +1
+   ```bash
+   ls .specify/specs/ | grep -oP '^\d{3}' | sort -n | tail -1  # 取最大值 +1
+   ```
+2. **iterations 编号**：扫描目标目录 `iterations/` 下已有文件，取最大编号 +1
+   ```bash
+   ls {feature_dir}/iterations/ | grep -oP 'iter-\K\d{3}' | sort -n | tail -1
+   ```
+3. **v{N} 子目录编号**：扫描目标目录下已有的 v{N} 目录，取最大编号 +1
+   ```bash
+   ls -d {feature_dir}/v*/ 2>/dev/null | grep -oP 'v\K\d+' | sort -n | tail -1
+   ```
+
+---
+
+## ⚠️ 需求归属规则（防止目录混乱）
+
+> **核心原则**：对已有需求的 bug 修复、小优化、功能增强，必须在原需求目录下迭代，禁止新建独立的 spec 目录。
+
+### 判断流程
+
+在 Phase 0 开始前，主进程必须执行归属判断：
+
+1. **扫描已有 spec 目录**：列出 `.specify/specs/` 下所有已有目录
+2. **语义匹配**：判断新需求是否属于已有需求的 bug/优化/增强
+3. **归属决策**：
+   - ✅ **归入已有目录**：bug 修复、小优化、功能增强、UI 调整
+   - ✅ **新建目录**：全新的独立功能，与现有需求无业务关联
+
+### 归入已有目录时的处理
+
+当判定为已有需求的迭代时：
+
+1. **文档存放**：在原需求目录下创建迭代文件：
+   ```
+   .specify/specs/003-xxx/
+   ├── spec.md                    # 原始规格
+   ├── plan.md                    # 原始计划
+   ├── tasks.md                   # 原始任务
+   ├── iterations/                # 迭代记录目录
+   │   ├── iter-001-{name}.md     # bug修复记录
+   │   ├── iter-002-{name}.md     # 优化记录
+   │   └── ...
+   ```
+
+2. **迭代文件格式**（`iter-{NNN}-{name}.md`）：
+   ```markdown
+   # 迭代记录: {描述}
+   
+   - 类型: bugfix / patch / enhancement
+   - 日期: {date}
+   - 关联原需求: {feature_id}
+   - 关联原文档位置: spec.md §{章节} / plan.md §{章节}
+   
+   ## 问题描述
+   {问题或优化点}
+   
+   ## 在原文档中的定位
+   - 原 spec 中的相关描述: spec.md §{章节} → {功能点}
+   - 原 plan 中的相关设计: plan.md §{章节} → {具体方法/模块}
+   
+   ## 变更内容
+   {修改了什么}
+   
+   ## 影响范围
+   {影响的文件和功能}
+   ```
+
+3. **双向索引（必须）**：
+
+   > **核心原则**：新文档引用原文档（正向），原文档也必须记录迭代（反向）。任何人读原文档时，能看到所有后续的修改记录。
+   
+   创建迭代文件后，**必须同时更新原 spec.md**：
+   
+   在末尾的「Iteration Index」章节追加一行：
+   ```markdown
+   ## Iteration Index
+   
+   | ID | Type | Date | Description | Document |
+   |----|------|------|-------------|----------|
+   | iter-001 | bugfix | 2026-04-09 | xxx修复 | [详情](iterations/iter-001-xxx.md) |
+   | v2 | enhancement | 2026-04-07 | xxx增强 | [详情](v2/spec.md) |
+   ```
+   
+   如果 spec.md 中没有「Iteration Index」章节，创建一个并追加到文档末尾。
+   plan.md / tasks.md 如有相关内容也需同理追加索引。
+
+4. **跳过评审**：bug 修复和小优化（`--bugfix` / `--patch`）跳过完整评审流程，但文档和双向索引必须保留
+
+5. **大型增强**：如果迭代内容较大（新增多个功能点），在原目录下建 `v{N}/` 子目录：
+   ```
+   .specify/specs/003-xxx/
+   ├── spec.md                    # v1 原始规格
+   ├── v2/                        # 大型增强 v2（独立子目录）
+   │   ├── spec.md                # 增量规格（索引回 ../spec.md）
+   │   ├── testcases.md
+   │   ├── plan.md                # 增量计划（索引回 ../plan.md）
+   │   ├── tasks.md
+   │   └── reviews/
+   ├── v3/                        # 后续大型增强（如有）
+   │   └── ...
+   ├── iterations/                # 小型 bug/优化记录
+   │   └── ...
+   ```
+   
+   **v{N} 子目录的文档规则**：
+   - 文档内容是**增量补充**，不重复原文件中已有的内容
+   - 每个文档顶部必须索引回原文件：`> 基于 [原始规格](../spec.md)，以下为 v2 增量变更`
+   - **原文件必须反向索引**：在原 spec.md 的「Iteration Index」中追加 v{N} 条目
+   - 走完整 SDD 流程（specify → testcases → plan → tasks → implement → review）
+   - 评审范围仅覆盖 v{N} 的增量代码，不重复评审 v1 已通过的部分
 
 ---
 
@@ -68,6 +186,21 @@ invocable: true
 ### Phase 0: 需求澄清（主进程执行）
 
 > 全流程中唯一的人类交互环节。
+
+#### 0.0 需求归属判断
+
+> **在任何其他步骤之前执行**，防止目录混乱。
+
+1. **扫描已有 spec 目录**：`ls .specify/specs/`
+2. **读取每个已有 spec 的标题和描述**（读取 `spec.md` 前几行即可）
+3. **判断新需求是否属于已有需求的 bug/优化/增强**
+4. **如果判定为已有需求的迭代**：
+   - 告知用户："这属于 `{original_feature_id}` 的迭代，将在原目录下记录"
+   - 使用 `--bugfix` / `--patch` 模式，跳过评审
+   - 在原目录下创建 `iterations/iter-{NNN}-{name}.md`
+   - 同时更新原 spec.md 的「Iteration Index」（双向索引）
+   - **流程结束**：不进入 Phase A/B/C，直接执行修复并记录文档
+5. **如果判定为全新功能**：继续正常的 Phase 0 → A → B → C 流程
 
 #### 0.1 需求预分析
 
@@ -174,6 +307,35 @@ Agent(
 
 **主进程检查**：确认 `.specify/specs/{feature_id}/spec.md` 文件已生成
 
+#### A1+ 自动拆分检查（spec）
+
+主进程检查 spec.md 行数：
+```bash
+LINE_COUNT=$(wc -l < .specify/specs/{feature_id}/spec.md)
+```
+
+如果 `LINE_COUNT > 500`，派发拆分 Agent：
+
+```python
+Agent(
+    name = "sdd-split-spec",
+    subagent_type = "general-purpose",
+    model = "fast",
+    description = "SDD-拆分Spec",
+    prompt = """
+你是文档拆分工具。
+
+读取执行指令：.claude/skills/sdd-split/SKILL.md
+执行：/sdd-split spec {feature_id} --auto
+
+完成后只回复"spec 拆分完成"或"spec 无需拆分"。
+"""
+)
+```
+
+> 拆分后，spec.md 变为轻量索引（含核心信息 50-100 行 + 快速导航表），详细内容在 `spec/` 子目录中。
+> 下游 Agent 通过渐进式披露机制按需加载模块（见本文「渐进式文档披露」一节）。
+
 #### A2. Agent: Testcases
 
 ```python
@@ -231,6 +393,32 @@ Agent(
 
 **主进程检查**：确认 `plan.md` 文件已生成
 
+#### A3+ 自动拆分检查（plan）
+
+主进程检查 plan.md 行数：
+```bash
+LINE_COUNT=$(wc -l < .specify/specs/{feature_id}/plan.md)
+```
+
+如果 `LINE_COUNT > 1000`，派发拆分 Agent：
+
+```python
+Agent(
+    name = "sdd-split-plan",
+    subagent_type = "general-purpose",
+    model = "fast",
+    description = "SDD-拆分Plan",
+    prompt = """
+你是文档拆分工具。
+
+读取执行指令：.claude/skills/sdd-split/SKILL.md
+执行：/sdd-split plan {feature_id} --auto
+
+完成后只回复"plan 拆分完成"或"plan 无需拆分"。
+"""
+)
+```
+
 #### A4. Agent: Tasks
 
 ```python
@@ -260,6 +448,32 @@ Agent(
 ```
 
 **主进程检查**：确认 `tasks.md` 文件已生成
+
+#### A4+ 自动拆分检查（tasks）
+
+主进程检查 tasks.md 行数：
+```bash
+LINE_COUNT=$(wc -l < .specify/specs/{feature_id}/tasks.md)
+```
+
+如果 `LINE_COUNT > 800`，派发拆分 Agent：
+
+```python
+Agent(
+    name = "sdd-split-tasks",
+    subagent_type = "general-purpose",
+    model = "fast",
+    description = "SDD-拆分Tasks",
+    prompt = """
+你是文档拆分工具。
+
+读取执行指令：.claude/skills/sdd-split/SKILL.md
+执行：/sdd-split tasks {feature_id} --auto
+
+完成后只回复"tasks 拆分完成"或"tasks 无需拆分"。
+"""
+)
+```
 
 **Planner 完成标志**：四份文件均已保存到 `.specify/specs/{feature_id}/`
 
@@ -570,11 +784,35 @@ Agent(
 ├── requirements/
 │   ├── original.md              # 知识库原始需求（如有）
 │   └── clarification.md         # 需求澄清记录
-├── spec.md                      # 功能规格
+├── spec.md                      # 功能规格（或拆分后的索引）（含 Iteration Index）
+├── spec/                        # 拆分后的模块目录（超 500 行时生成）
+│   ├── README.md                # 完整索引
+│   ├── overview.md              # 功能概述
+│   ├── user-stories.md          # 用户故事
+│   └── ...
 ├── testcases.md                 # 测试用例
-├── plan.md                      # 技术计划
-├── tasks.md                     # 任务分解
-└── reviews/                     # 评审专用文件夹
+├── plan.md                      # 技术计划（或拆分后的索引）
+├── plan/                        # 拆分后的模块目录（超 1000 行时生成）
+│   ├── README.md
+│   ├── architecture.md
+│   └── ...
+├── tasks.md                     # 任务分解（或拆分后的索引）
+├── tasks/                       # 拆分后的模块目录（超 800 行时生成）
+│   ├── README.md
+│   ├── phase-0-preparation.md
+│   └── ...
+├── iterations/                  # 小型迭代记录（bug修复/小优化，跳过评审）
+│   ├── iter-001-{name}.md
+│   └── ...
+├── v2/                          # 大型增强 v2（走完整 SDD 流程）
+│   ├── spec.md                  # 增量规格（索引回 ../spec.md）
+│   ├── testcases.md
+│   ├── plan.md
+│   ├── tasks.md
+│   └── reviews/
+├── v3/                          # 后续大型增强（如有）
+│   └── ...
+└── reviews/                     # v1 评审专用文件夹
     ├── r1/                      # 第 1 轮评审
     │   ├── agent-a.md           # 严苛审查员报告
     │   ├── agent-b.md           # 需求守护者报告
@@ -610,6 +848,44 @@ Agent prompt 薄壳存储在 `.specify/templates/agent-prompts/` 目录下：
 - `fix.md` — 薄壳，引用 sdd-implement + sdd-review Skill + 修复执行步骤
 
 **维护规则**：修改领域逻辑时只需更新 Skill 文件，Agent prompt 自动生效。
+
+---
+
+## 渐进式文档披露
+
+### 拆分阈值
+
+| 文档类型 | 拆分阈值 | 检查时机 |
+|---------|---------|---------|
+| spec.md | 500 行 | A1 完成后（A1+） |
+| plan.md | 1000 行 | A3 完成后（A3+） |
+| tasks.md | 800 行 | A4 完成后（A4+） |
+
+### 拆分后的文件结构
+
+拆分后，原文件（如 `spec.md`）变为轻量索引文件（50-100 行核心信息 + 快速导航表），详细内容存储在同名子目录中：
+
+```
+spec.md          → 索引文件（核心概览 + 导航表）
+spec/            → 模块化子目录
+├── README.md    → 完整索引
+├── overview.md  → 功能概述
+├── user-stories.md → 用户故事
+└── ...
+spec.md.backup   → 原文档备份
+```
+
+### 下游 Agent 渐进式加载协议
+
+所有下游 Agent（testcases/plan/tasks/implement/review/fix）在读取 spec.md、plan.md、tasks.md 时，必须遵循以下协议：
+
+1. **先读取主文件**（如 `spec.md`）
+2. **检测是否已拆分**：如果文件内容包含 `文档已拆分为模块化结构`，说明已拆分为模块化结构
+3. **从索引获取导航**：读取快速导航表，了解模块分布
+4. **按需加载模块**：根据当前任务需要，选择性读取 `{type}/` 目录下的具体模块文件
+5. **不全量加载**：禁止一次性读取所有模块文件，按需逐个加载
+
+> 此协议已内置于各 Agent Prompt 中（`.specify/templates/agent-prompts/*.md`），Agent 自动遵循。
 
 ---
 

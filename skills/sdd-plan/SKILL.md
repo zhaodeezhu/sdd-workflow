@@ -171,7 +171,9 @@ tasks.md   → When（何时做）：任务分解、执行顺序、进度跟踪
 
 ### 7. 检测文档大小
 
-plan.md 超过 1000 行时，自动执行 `/sdd-split plan {feature_id} --auto` 拆分（在 sdd-run 中）或提示用户使用 `/sdd-split plan {feature_id}`（手动模式下）。
+plan.md 超过 1000 行时：
+- **sdd-run 模式**：主进程在 Plan Agent 完成后自动检测行数，超阈值则派发 sdd-split Agent 执行 `/sdd-split plan {feature_id} --auto` 强制拆分为模块化结构，支持下游 Agent 渐进式加载。
+- **手动模式**：提示用户使用 `/sdd-split plan {feature_id}` 手动拆分。
 
 ### 8. 交互确认
 向用户展示技术计划要点，询问是否需要调整。

@@ -18,6 +18,8 @@
 3. `.specify/memory/constitution.md` — 项目宪法
 4. 待审查代码文件列表（由主进程提供）
 
+**渐进式文档加载**：读取 plan.md 时，如果文件内容包含「文档已拆分为模块化结构」，说明已拆分。先从索引获取架构概览，然后加载 `plan/architecture.md`、`plan/backend-api.md`、`plan/frontend-api.md` 等模块验证接口对接。集成检查需要完整的 API 定义和数据流，务必加载相关模块。
+
 ## 评分规则
 
 评分只有两个档位：

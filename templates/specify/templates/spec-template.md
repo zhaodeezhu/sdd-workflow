@@ -199,6 +199,18 @@ This specification is based on the original requirement document. See original d
 
 ---
 
+## 8. Iteration Index
+
+> All subsequent modifications (bugfixes, patches, enhancements) to this feature are tracked here.
+> Each entry links to the detailed iteration document. This table is the **reverse index** — 
+> anyone reading this spec can see the full history of all changes made after v1.
+
+| ID | Type | Date | Description | Document |
+|----|------|------|-------------|----------|
+<!-- Rows are appended automatically by sdd-fix and sdd-run when iterations are created -->
+
+---
+
 *This document is generated based on SDD specification template*
 
 <!--
