@@ -1,0 +1,86 @@
+templates/specify/agent-prompts/plan.md
+  648b66cd45ead0e2 17-18
+templates/specify/agent-prompts/review-c.md
+  648b66cd45ead0e2 21-22
+templates/specify/agent-prompts/tasks.md
+  648b66cd45ead0e2 17-18
+templates/specify/agent-prompts/implement.md
+  648b66cd45ead0e2 18-19
+templates/skills/sdd-specify/SKILL.md
+  648b66cd45ead0e2 243-245
+skills/sdd-specify/SKILL.md
+  648b66cd45ead0e2 243-245
+  03ab52fb4cfd2f4b 212-222,229
+templates/specify/agent-prompts/testcases.md
+  648b66cd45ead0e2 15-16
+skills/sdd-plan/SKILL.md
+  648b66cd45ead0e2 174-176
+templates/skills/sdd-plan/SKILL.md
+  648b66cd45ead0e2 174-176
+templates/specify/agent-prompts/review-b.md
+  648b66cd45ead0e2 20-21
+templates/specify/agent-prompts/fix.md
+  648b66cd45ead0e2 19-20
+templates/specify/agent-prompts/review-a.md
+  648b66cd45ead0e2 20-21
+skills/sdd-tasks/SKILL.md
+  648b66cd45ead0e2 129-131
+templates/skills/sdd-tasks/SKILL.md
+  648b66cd45ead0e2 129-131
+skills/sdd-fix/SKILL.md
+  03ab52fb4cfd2f4b 452-453,458-463
+skills/sdd-run/SKILL.md
+  648b66cd45ead0e2 310-338,396-421,452-477,788-792,794-803,854-891
+  03ab52fb4cfd2f4b 30-31,36-150,190-204,787,804-815
+templates/specify/templates/spec-template.md
+  03ab52fb4cfd2f4b 202-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.10",
+  "base_commit_sha": "eb8c182e78995e5767fe41d659f0e9a30e70be36",
+  "prompts": {
+    "03ab52fb4cfd2f4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875bc89-de4a-44e3-aebf-85d349c5236b",
+        "model": "claude-opus-4-6-thinking"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 2,
+      "accepted_lines": 179,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/f57c0ef98729ce9788b254a64456ef784c5968b5eadde11856c4c7e75aa28a40"
+    },
+    "648b66cd45ead0e2": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "151c918c-eaed-42e8-9bcb-3e1a92f4dc70",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 169,
+      "total_deletions": 24,
+      "accepted_lines": 168,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c7a6902422b2a2285a353426f2ece41d4b6f722ab217306b88aadaa91500f063"
+    },
+    "dd1715e7a929a153": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f67e8b47-0603-4216-a723-292d603a398d",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 217,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c52ec28ac0037beabf555243a00b12b1bb56fd800aba77f0d7cdb63627dbaffc"
+    }
+  }
+}
