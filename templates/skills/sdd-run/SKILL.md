@@ -275,6 +275,11 @@ invocable: true
 
 > **关键**：每个 Agent 的 prompt 告诉它"先读指令文件，再按指令执行"。
 > 指令文件路径：`.specify/templates/agent-prompts/{stage}.md`
+>
+> **路径规则**：所有 Agent prompt 中的相对路径（`.specify/`、`.claude/`、`CLAUDE.md`、`repo/`）均相对于**项目根目录**。
+> 主进程在派发 Agent 时，**必须在 prompt 首行声明项目根目录的绝对路径**：
+> `项目根目录: /absolute/path/to/project`
+> Agent 读写文件时必须基于此绝对路径拼接完整路径，禁止依赖 cwd。
 
 #### A1. Agent: Specify
 
@@ -286,6 +291,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD-Specify",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是 SDD 功能规格生成器。
 
 第一步：读取你的执行指令文件：
@@ -344,6 +351,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD-Testcases",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是 SDD 测试用例设计器。
 
 第一步：读取你的执行指令文件：
@@ -371,6 +380,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD-Plan",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是 SDD 技术计划生成器。
 
 第一步：读取你的执行指令文件：
@@ -427,6 +438,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD-Tasks",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是 SDD 任务分解生成器。
 
 第一步：读取你的执行指令文件：
@@ -487,6 +500,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD-Implement",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是 SDD 任务执行器。
 
 第一步：读取你的执行指令文件：
@@ -541,6 +556,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD评审-严苛审查员",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是极其严苛的代码审查专家。
 
 第一步：读取你的执行指令文件：
@@ -565,6 +582,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD评审-需求守护者",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是最终用户的代言人。
 
 第一步：读取你的执行指令文件：
@@ -589,6 +608,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD评审-集成检查员",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是系统集成专家。
 
 第一步：读取你的执行指令文件：
@@ -626,6 +647,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD-仲裁",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是评审仲裁器。
 
 第一步：读取你的执行指令文件：
@@ -674,6 +697,8 @@ Agent(
     subagent_type = "general-purpose",
     description = "SDD-修复",
     prompt = """
+项目根目录: {PROJECT_ROOT}
+
 你是评审修复执行器。
 
 第一步：读取你的执行指令文件：

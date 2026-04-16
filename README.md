@@ -15,9 +15,9 @@ Specify --> Test Cases --> Plan --> Tasks --> Implement --> Review
 
 Every phase produces a document. Documents become contracts. AI implements against those contracts. An independent review verifies compliance.
 
-### v4: Agent-Per-Phase Architecture
+### v5: Self-Review Gate & Pragmatic Review
 
-Each pipeline phase runs as an independent Agent with its own context window. The main process is a lightweight orchestrator — it dispatches agents, checks file existence, and reads conclusion lines. This eliminates context accumulation and improves reliability.
+Building on the Agent-Per-Phase architecture, v5 adds self-review gates, stronger requirement clarification, and pragmatic review thresholds — reducing wasted review iterations while maintaining quality.
 
 Skills are the **single source of truth** for domain logic. Agent prompts (`.specify/templates/agent-prompts/`) are thin shells that reference Skills and add I/O paths.
 

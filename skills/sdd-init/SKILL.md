@@ -10,8 +10,19 @@ invocable: true
 
 ## 核心定位
 
-> SDD Init 是 SDD 工作流的入口点。它分析项目结构、技术栈、架构模式，
+> SDD Init 是 SDD 工作流的入口点。它通过**深度分析实际代码**来识别项目结构、技术栈、架构模式，
 > 生成一份项目宪法（constitution.md），作为后续所有 SDD 命令的上下文基础。
+
+## 探测铁律
+
+> **代码即真相（Code is the Source of Truth）**
+>
+> 1. **禁止信任文档**：项目中的 .md 文件、README、注释等文档内容可能已过时或不准确，**不得**作为探测依据
+> 2. **必须分析实际代码**：所有探测结果必须来自对实际代码文件的分析（源码、配置文件、构建脚本、依赖声明）
+> 3. **配置文件仅作入口**：package.json / pom.xml 等配置文件可用于识别项目类型和依赖列表，但技术栈的实际使用方式必须通过阅读代码确认
+> 4. **目录结构需验证**：发现特征目录后，必须进入目录阅读实际代码文件，确认其真实用途，不能仅凭目录名推断
+>
+> 简而言之：**探测 = 读代码，不是读文档。**
 
 ## 执行步骤
 
@@ -19,7 +30,7 @@ invocable: true
 
 #### 1.1 探测项目类型
 
-扫描项目根目录，识别项目类型：
+扫描项目根目录的**构建配置和依赖声明文件**，识别项目类型：
 
 | 文件标识 | 项目类型 |
 |---------|---------|
@@ -33,6 +44,27 @@ invocable: true
 | 以上都有 | 全栈 / Monorepo |
 
 #### 1.2 探测技术栈
+
+> **必须通过读取实际代码来确认技术栈**，不能仅靠依赖声明推断。
+> 例如：package.json 中声明了 `vue` 依赖，但代码中实际使用的是 React，应以代码为准。
+
+**探测方法**：
+
+**第一步：读取依赖声明获取候选列表**
+- 前端：读取 `package.json` 的 dependencies / devDependencies
+- 后端：读取 `pom.xml` 的 dependencies 或 `build.gradle` 的 dependencies 块
+
+**第二步：通过代码验证实际使用的技术**
+
+| 验证项 | 验证方法 |
+|--------|---------|
+| 前端框架 | 搜索入口文件（main.js/tsx、App.tsx 等），查看 import 语句和渲染方式 |
+| UI 库 | 搜索组件文件中的 import 语句（如 `from 'antd'`、`from '@mui'`） |
+| 状态管理 | 搜索 store 定义、Provider 包裹、useSelector/useStore 等调用 |
+| 构建工具 | 检查实际构建配置文件（webpack.config.js、vite.config.ts 等） |
+| 后端框架 | 读取启动类/入口文件（如 `@SpringBootApplication`、`app.listen()`） |
+| ORM | 搜索 Mapper/Repository/Model 文件，查看注解和 SQL 映射方式 |
+| 数据库 | 读取数据库连接配置（application.yml、.env 等），确认实际数据库类型 |
 
 **前端技术栈**（如果有 package.json）：
 - 框架：React / Vue / Angular / Svelte / Next.js / Nuxt
@@ -48,53 +80,64 @@ invocable: true
 
 #### 1.3 探测架构模式
 
-扫描目录结构推断架构模式：
+> **目录名仅作线索，必须阅读目录内的实际代码确认架构**。
+> 例如：存在 `domain/` 目录不代表就是 DDD，需要确认内部是否有领域模型、聚合根等 DDD 要素。
 
-| 目录特征 | 架构模式 |
-|---------|---------|
-| `domain/`, `application/`, `infrastructure/` | DDD 分层 |
-| `controllers/`, `services/`, `models/` | MVC |
-| `src/modules/`, `src/features/` | 模块化/特性驱动 |
-| `cmd/`, `internal/` | Go 标准布局 |
-| `pages/`, `components/`, `stores/` | 前端 SPA |
-| 无明显分层 | 简单/待定 |
+**探测方法**：
+
+1. 扫描目录结构，获取候选架构模式
+2. **进入关键目录，阅读 2-3 个核心代码文件**，确认实际分层逻辑
+3. 分析类/函数之间的调用关系和依赖方向
+
+| 目录特征 | 候选模式 | 验证方法 |
+|---------|---------|---------|
+| `domain/`, `application/`, `infrastructure/` | DDD 分层 | 检查 domain 层是否有聚合根/值对象，application 层是否仅做编排 |
+| `controllers/`, `services/`, `models/` | MVC | 检查 controller->service->model 的调用链 |
+| `src/modules/`, `src/features/` | 模块化/特性驱动 | 检查模块内是否自包含（路由+组件+状态） |
+| `cmd/`, `internal/` | Go 标准布局 | 检查 cmd 下的 main 入口和 internal 的包结构 |
+| `pages/`, `components/`, `stores/` | 前端 SPA | 检查路由配置和组件组织方式 |
+| 无明显分层 | 简单/待定 | 阅读入口文件判断实际组织方式 |
 
 #### 1.4 探测测试框架
 
-| 文件特征 | 测试框架 |
-|---------|---------|
-| `jest.config.*`, `*.test.js` | Jest |
-| `vitest.config.*` | Vitest |
-| `pytest.ini`, `conftest.py` | pytest |
-| `*_test.go` | Go testing |
-| `*Test.java`, `*Tests.java` | JUnit |
-| `playwright.config.*` | Playwright (E2E) |
-| `cypress.config.*` | Cypress (E2E) |
+> **必须确认测试文件中有实际测试代码**，不能仅凭配置文件或文件命名判断。
+
+| 文件特征 | 候选框架 | 验证方法 |
+|---------|---------|---------|
+| `jest.config.*`, `*.test.js` | Jest | 打开一个 .test 文件确认使用了 jest API |
+| `vitest.config.*` | Vitest | 确认 import 来自 vitest |
+| `pytest.ini`, `conftest.py` | pytest | 确认存在 test_ 前缀的函数 |
+| `*_test.go` | Go testing | 确认使用 testing.T |
+| `*Test.java`, `*Tests.java` | JUnit | 确认使用 @Test 注解 |
+| `playwright.config.*` | Playwright (E2E) | 确认有 E2E 测试用例 |
+| `cypress.config.*` | Cypress (E2E) | 确认 cypress/ 下有测试文件 |
 
 ### 2. 展示探测结果并确认
 
-向用户展示探测到的一切信息，询问是否需要修正：
+向用户展示基于**代码分析**的探测结果，标注每项结果的来源文件，询问是否需要修正：
 
 ```
-━━━ 项目探测结果 ━━━
+━━━ 项目探测结果（基于代码分析）━━━
 
 📁 项目类型: 全栈 (前端 + 后端)
 
 🔧 前端技术栈:
-  - 框架: React 17
-  - UI 库: Ant Design 4
-  - 状态管理: MobX 5
-  - 构建工具: Webpack 5
+  - 框架: React 17         ← 来源: src/index.tsx (import ReactDOM)
+  - UI 库: Ant Design 4    ← 来源: components/ 中大量 import { Table } from 'antd'
+  - 状态管理: MobX 5       ← 来源: stores/*.ts 中使用 @observable 装饰器
+  - 构建工具: Webpack 5    ← 来源: webpack.config.js
 
 🔧 后端技术栈:
-  - 语言: Java 8
-  - 框架: Spring Boot 2.1.7
-  - ORM: MyBatis
-  - 数据库: PostgreSQL
+  - 语言: Java 8           ← 来源: pom.xml (<source>1.8</source>)
+  - 框架: Spring Boot 2.1.7 ← 来源: Application.java (@SpringBootApplication)
+  - ORM: MyBatis           ← 来源: mapper/*.xml 中有 SQL 映射
+  - 数据库: PostgreSQL     ← 来源: application.yml (jdbc:postgresql://)
 
 🏗️ 架构模式: DDD 分层 (后端) + SPA (前端)
+  ← 来源: domain/ 下确认有聚合根类, application/ 下为服务编排
 
 🧪 测试框架: Jest (前端) + JUnit (后端)
+  ← 来源: *.test.tsx 使用 describe/it, *Test.java 使用 @Test
 
 ❓ 以上信息是否正确？如有需要修正的地方请告诉我。
 ```
@@ -349,7 +392,9 @@ mkdir -p .specify/memory .specify/specs
 
 ## 注意事项
 
-1. **不修改 CLAUDE.md**：只输出建议追加的内容，由用户决定是否添加
-2. **幂等性**：重复运行时检测已有宪法，询问是更新还是重新生成
-3. **渐进式**：探测不到的信息不强制要求，可后续通过 `/sdd-constitution` 补充
-4. **最小化提问**：只问真正探测不到的关键信息，不超过 5 个问题
+1. **代码优先，文档不可信**：项目中的 .md 文件、README 等文档可能已过时，探测时必须以实际代码为准，不得依赖文档内容作为探测依据
+2. **标注来源**：每项探测结果必须标注其来源文件和依据（如具体的 import 语句、配置项、代码模式）
+3. **不修改 CLAUDE.md**：只输出建议追加的内容，由用户决定是否添加
+4. **幂等性**：重复运行时检测已有宪法，询问是更新还是重新生成
+5. **渐进式**：探测不到的信息不强制要求，可后续通过 `/sdd-constitution` 补充
+6. **最小化提问**：只问真正探测不到的关键信息，不超过 5 个问题

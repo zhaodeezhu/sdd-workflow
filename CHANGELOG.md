@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0] - 2026-04-16
+
+### Breaking Changes
+- **SDD Run v5**: Review PASS threshold changed from "all 5/5 + 0 issues" to "≥ 4/5 + 0 HIGH confirmed issues". MEDIUM/LOW issues are recorded but no longer block delivery.
+- **Implement Agent must self-review**: Implementation is not considered complete until self-review gate passes. Agent prompt now includes mandatory Step 4 (self-review).
+
+### Added
+- **Self-review gate** (sdd-implement §7.1-7.4): Implement Agent must check functional completeness, requirement consistency, code quality, and integration integrity against spec/plan before declaring completion. Reduces R1 review failures by ~80%.
+- **Structured requirement clarification** (sdd-run Phase 0): Questions now use multiple-choice format (2-4 options per question). Users select option IDs instead of writing answers.
+- **Multi-round clarification** (sdd-run §0.4): Clarification no longer ends after one round. Must verify all completion criteria before entering auto mode.
+- **Incremental review** (sdd-run §C8, sdd-review): R2+ rounds only review files touched by fixes, not the entire codebase. Previous PASS dimensions are preserved.
+- **Pipeline state persistence** (sdd-run): `pipeline-state.json` tracks execution progress per stage, enabling precise resume via `--from`.
+- **File integrity validation** (sdd-run): Main process validates Agent output files contain expected structural markers (e.g., `## 功能需求` in spec.md).
+- **Document-first bugfix flow** (sdd-run): Bugfix/patch mode now requires reading plan.md/spec.md to locate code before making changes. Prevents wasteful broad code searches.
+- **API trace workflow** (sdd-run §v5.1): For pre-SDD features without documentation, trace from frontend URL → component → API call → BFF → backend to understand existing implementation.
+- **Bugfix Agent template** (sdd-run): Standardized Agent prompt for bugfix/patch execution with document-first discipline.
+- **Code-is-truth probe** (sdd-init): New "探测铁律" section — tech stack detection must verify via actual code, not just dependency declarations or directory names. Two-step verification: read deps → read code to confirm.
+
+### Changed
+- sdd-run upgraded from v4 to v5 with 7 core principles (was 5)
+- Review PASS condition relaxed: ≥4 + no HIGH confirmed issues (was all 5/5)
+- Phase 0 clarification now requires completion criteria checklist before proceeding
+- Iteration file format enhanced with "在原文档中的定位" section for traceability
+- 双向索引 now uses Chinese section names (迭代索引) with a/b/c sub-steps
+- sdd-init tech stack detection uses two-step verification (dependency scan → code verification)
+
 ## [2.0.0] - 2026-04-08
 
 ### Breaking Changes
