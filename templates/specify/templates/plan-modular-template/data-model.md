@@ -1,21 +1,21 @@
-# Data Model
+# 数据模型
 
-> This document describes database design (DDL) and data transfer objects (DTO)
+> 本文档描述数据库设计（DDL）和数据传输对象（DTO）
 
-## 1. Database Design
+## 1. 数据库设计
 
-### 1.1 New Tables
+### 1.1 新增表
 
-#### Table: {table_name}
+#### 表名: {table_name}
 
-**Description**: {table_purpose}
+**表说明**: {表的用途描述}
 
 **DDL**:
 
 ```sql
 CREATE TABLE {table_name} (
     id BIGSERIAL PRIMARY KEY,
-    {column_name} VARCHAR(100) NOT NULL,
+    {column_name} VARCHAR(100) NOT NULL COMMENT '{字段说明}',
     created_by VARCHAR(50) NOT NULL,
     created_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(50),
@@ -25,24 +25,24 @@ CREATE TABLE {table_name} (
 
 CREATE INDEX idx_{table_name}_{column} ON {table_name}({column_name});
 
-COMMENT ON TABLE {table_name} IS '{table_description}';
-COMMENT ON COLUMN {table_name}.{column_name} IS '{column_description}';
+COMMENT ON TABLE {table_name} IS '{表说明}';
+COMMENT ON COLUMN {table_name}.{column_name} IS '{字段说明}';
 ```
 
-### 1.2 Modified Tables
+### 1.2 修改表
 
-#### Table: {existing_table}
+#### 表名: {existing_table}
 
-**Change Description**: {change_reason}
+**变更说明**: {变更原因}
 
 **DDL**:
 
 ```sql
 ALTER TABLE {existing_table} ADD COLUMN {new_column} VARCHAR(100);
-COMMENT ON COLUMN {existing_table}.{new_column} IS '{column_description}';
+COMMENT ON COLUMN {existing_table}.{new_column} IS '{字段说明}';
 ```
 
-### 1.3 Entity Relationship Diagram
+### 1.3 实体关系图
 
 ```
 ┌─────────────┐         ┌─────────────┐
@@ -53,78 +53,87 @@ COMMENT ON COLUMN {existing_table}.{new_column} IS '{column_description}';
 └─────────────┘         └─────────────┘
 ```
 
-## 2. DTO Design
+## 2. DTO 设计
 
-### 2.1 Request DTO
+### 2.1 请求 DTO
 
 #### {Name}RequestDTO
 
-**Purpose**: {purpose_description}
+**用途**: {用途说明}
 
-```{dto_language}
-class {Name}RequestDTO {
-    /** {field_description} */
-    {field1}: {type}  // required
+```java
+public class {Name}RequestDTO {
+    /** {字段说明} */
+    @NotNull(message = "{字段}不能为空")
+    private String field1;
 
-    /** {field_description} */
-    {field2}: {type}  // optional
+    /** {字段说明} */
+    @Size(max = 100, message = "{字段}长度不能超过100")
+    private String field2;
+
+    // getters and setters
 }
 ```
 
-### 2.2 Response DTO
+### 2.2 响应 DTO
 
 #### {Name}ResponseDTO
 
-**Purpose**: {purpose_description}
+**用途**: {用途说明}
 
-```{dto_language}
-class {Name}ResponseDTO {
-    {id}: {type}
-    {field1}: {type}
-    {field2}: {type}
+```java
+public class {Name}ResponseDTO {
+    /** {字段说明} */
+    private Long id;
+
+    /** {字段说明} */
+    private String field1;
+
+    /** {字段说明} */
+    private String field2;
+
+    // getters and setters
 }
 ```
 
-### 2.3 DTO Conversion
+### 2.3 DTO 转换
 
-```{dto_language}
+```java
 // Entity -> DTO
-function toDTO(entity) {
-    return {
-        id: entity.id,
-        field1: entity.field1,
-        // ...
-    };
+public {Name}ResponseDTO toDTO({Name}Entity entity) {
+    {Name}ResponseDTO dto = new {Name}ResponseDTO();
+    dto.setId(entity.getId());
+    dto.setField1(entity.getField1());
+    return dto;
 }
 
 // DTO -> Entity
-function toEntity(dto) {
-    return {
-        field1: dto.field1,
-        // ...
-    };
+public {Name}Entity toEntity({Name}RequestDTO dto) {
+    {Name}Entity entity = new {Name}Entity();
+    entity.setField1(dto.getField1());
+    return entity;
 }
 ```
 
-## 3. Data Dictionary
+## 3. 数据字典
 
-### 3.1 Enum Types
+### 3.1 枚举类型
 
 #### {EnumName}
 
-| Value | Description | Notes |
-|-------|-------------|-------|
-| VALUE1 | Description 1 | Notes 1 |
-| VALUE2 | Description 2 | Notes 2 |
+| 值 | 说明 | 备注 |
+|----|------|------|
+| VALUE1 | 说明1 | 备注1 |
+| VALUE2 | 说明2 | 备注2 |
 
-### 3.2 State Transitions
+### 3.2 状态流转
 
 ```
-Initial -> Processing -> Complete
-         |
-       Failed
+初始状态 → 处理中 → 完成
+         ↓
+       失败
 ```
 
 ---
 
-Back to [Plan Index](./README.md)
+返回 [计划索引](./README.md)

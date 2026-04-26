@@ -1,5 +1,5 @@
 {
-  "source": "{source_type}",
+  "source": "confluence",
   "source_url": "{source_url}",
   "page_id": "{page_id}",
   "title": "{title}",

@@ -1,112 +1,124 @@
-# Performance Optimization
+# 性能优化
 
-> This document describes performance optimization strategies
+> 本文档描述性能优化方案
 
-## 1. Database Optimization
+## 1. 数据库优化
 
-### 1.1 Index Design
+### 1.1 索引设计
 
 ```sql
--- Single column index
+-- 单列索引
 CREATE INDEX idx_{table}_{column} ON {table}({column});
 
--- Composite index
+-- 复合索引
 CREATE INDEX idx_{table}_{col1}_{col2} ON {table}({col1}, {col2});
 
--- Unique index
+-- 唯一索引
 CREATE UNIQUE INDEX uk_{table}_{column} ON {table}({column});
 ```
 
-### 1.2 Query Optimization
+### 1.2 查询优化
 
-- Avoid SELECT *
-- Use pagination
-- Avoid N+1 queries
-- Use batch operations
+- 避免 SELECT *
+- 使用分页查询
+- 避免 N+1 查询
+- 使用批量操作
 
-```
-// Bad: N+1 query
-for each item in items:
-    query database for item details
+```java
+// ❌ N+1 查询
+for (Order order : orders) {
+    List<Item> items = itemRepository.findByOrderId(order.getId());
+}
 
-// Good: Batch query
-collect all item IDs
-query database for all item details at once
-use Map for lookup
-```
-
-## 2. Caching Strategy
-
-### 2.1 Application Cache
-
-```
-// Cache frequently accessed data
-// Invalidate cache on update/delete
-// Set appropriate TTL
+// ✅ 批量查询
+List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+Map<Long, List<Item>> itemsMap = itemRepository.findByOrderIds(orderIds);
 ```
 
-### 2.2 Cache Invalidation Strategy
+## 2. 缓存策略
 
-- Active invalidation: Clear cache on update/delete
-- Passive invalidation: Set expiration time (TTL)
-- Cache warmup: Load hot data on system startup
+### 2.1 Redis 缓存
 
-## 3. Frontend Optimization
+```java
+@Cacheable(value = "user", key = "#id")
+public User getById(Long id) {
+    return userRepository.selectById(id);
+}
 
-### 3.1 Code Splitting
-
+@CacheEvict(value = "user", key = "#id")
+public void update(Long id, User user) {
+    userRepository.updateById(user);
+}
 ```
-// Route-level lazy loading
-// Load components on demand
+
+### 2.2 缓存失效策略
+
+- 主动失效：更新/删除时清除缓存
+- 被动失效：设置过期时间（TTL）
+- 缓存预热：系统启动时加载热点数据
+
+## 3. 前端优化
+
+### 3.1 代码分割
+
+```javascript
+// 路由懒加载
+const List = LoadableComponent(() => import('./List'));
 ```
 
-### 3.2 List Optimization
+### 3.2 列表优化
 
-- Virtual scrolling (for large data sets)
-- Pagination
-- Debounce/throttle user input
+- 虚拟滚动（大数据量）
+- 分页加载
+- 防抖/节流
 
-```
-// Debounce search input
+```javascript
+// 防抖
 const debouncedSearch = debounce(handleSearch, 300);
 
-// Throttle scroll handler
+// 节流
 const throttledScroll = throttle(handleScroll, 100);
 ```
 
-## 4. API Optimization
+## 4. 接口优化
 
-### 4.1 Batch APIs
+### 4.1 批量接口
 
-```
-// Batch query endpoint
-// POST /batch with list of IDs
-// Returns map of ID to data
-```
-
-### 4.2 Async Processing
-
-```
-// Long-running operations processed asynchronously
-// Return task ID, poll for completion
+```java
+// 批量查询
+@PostMapping("/batch")
+public ResponseEntity<RestResponse> batchGet(@RequestBody List<Long> ids) {
+    List<DTO> result = service.batchGetByIds(ids);
+    return ResponseFactory.getOkResponse(result);
+}
 ```
 
-## 5. Performance Monitoring
+### 4.2 异步处理
 
-### 5.1 Slow Query Monitoring
+```java
+@Async
+public CompletableFuture<Result> asyncProcess(Request request) {
+    // 异步处理
+    return CompletableFuture.completedFuture(result);
+}
+```
+
+## 5. 性能监控
+
+### 5.1 慢查询监控
 
 ```sql
--- Enable slow query log
--- Set appropriate threshold
--- Monitor and optimize slow queries
+-- 开启慢查询日志
+SET slow_query_log = ON;
+SET long_query_time = 1;
 ```
 
-### 5.2 API Performance Monitoring
+### 5.2 接口性能监控
 
-- Response time monitoring
-- QPS monitoring
-- Error rate monitoring
+- 响应时间监控
+- QPS 监控
+- 错误率监控
 
 ---
 
-Back to [Plan Index](./README.md)
+返回 [计划索引](./README.md)

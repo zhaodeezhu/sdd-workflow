@@ -28,7 +28,7 @@ invocable: true
 
 **❌ 过度暴露实现**:
 ```
-| UT-020 | checkManyLotNumberForSubLotItem-正常 | 父任务通过外键关联了子任务 | 调用checkManyLotNumberForSubLotItem | 通过 findEarliestSubTaskId 找到子任务 |
+| UT-020 | checkManyLotNumberForSubLotItem-正常 | 父任务通过 SFW_TASK_MO_LINE_SOURCE 关联了子任务 | 调用checkManyLotNumberForSubLotItem | 通过 findEarliestSubTaskId 找到子任务 |
 ```
 
 **✅ 聚焦行为验证**:
@@ -63,14 +63,14 @@ invocable: true
 ### 2. 分析测试范围
 
 #### 2.1 后端测试范围
-- 领域服务/业务逻辑
-- 数据访问层操作
+- 领域服务业务逻辑
+- 仓储层数据操作
 - API接口契约
 - 边界条件和异常
 
 #### 2.2 前端测试范围
 - 组件渲染和交互
-- 状态管理
+- Store状态管理
 - API调用和错误处理
 - 用户交互流程
 
@@ -84,7 +84,7 @@ invocable: true
 - 空值/null处理
 
 #### 3.2 集成测试设计
-- 数据访问层CRUD操作
+- 仓储层CRUD操作
 - API接口请求响应
 - 数据库事务
 
@@ -92,7 +92,7 @@ invocable: true
 - 组件渲染测试
 - 用户交互测试
 - 表单校验测试
-- 状态管理测试
+- Store状态测试
 
 #### 3.4 E2E测试设计
 - 关键用户流程
@@ -101,24 +101,20 @@ invocable: true
 
 ### 4. 生成测试代码骨架
 
-根据项目技术栈（参考 constitution.md）生成对应的测试代码骨架。使用项目测试框架编写示例代码。
-
-**根据 constitution.md 中的技术栈选择对应格式**：
-- 如果后端使用 Java/JVM：使用 JUnit + Mockito 风格
-- 如果后端使用 Go：使用标准 testing 包风格
-- 如果后端使用 Python：使用 pytest 风格
-- 如果前端使用 React：使用 Jest + React Testing Library 风格
-- 如果前端使用 Vue：使用 Vitest + Vue Test Utils 风格
-- 其他框架根据 constitution.md 中的测试框架配置
+为每个测试用例生成可执行的代码骨架：
+- Java单元测试 (JUnit + Mockito)
+- API测试 (MockMvc)
+- 前端测试 (Jest + React Testing Library)
+- E2E测试 (Playwright)
 
 ### 5. 建立测试与实现的映射
 
 | 测试类型 | 关联任务 | 验证内容 |
 |----------|----------|----------|
-| 单元测试 | 后端业务逻辑任务 | 业务逻辑 |
-| 集成测试 | 数据访问任务 | 数据持久化 |
-| API测试 | API接口任务 | 接口契约 |
-| 前端测试 | 前端组件任务 | UI交互 |
+| 单元测试 | Task 1.4 领域服务 | 业务逻辑 |
+| 集成测试 | Task 1.3 仓储实现 | 数据持久化 |
+| API测试 | Task 1.6 Controller | 接口契约 |
+| 前端测试 | Task 2.3 页面组件 | UI交互 |
 
 ### 6. 保存文档
 保存到: `.specify/specs/{feature_id}/testcases.md`
@@ -143,10 +139,10 @@ invocable: true
 └─────────────┴────────┴──────────┘
 
 🔗 测试与实现映射：
-- UT-001~015 → 业务逻辑任务
-- IT-001~008 → 数据访问任务
-- API-001~010 → API接口任务
-- FT-001~012 → 前端组件任务
+- UT-001~015 → Task 1.4 领域服务
+- IT-001~008 → Task 1.3 仓储实现
+- API-001~010 → Task 1.6 Controller
+- FT-001~012 → Task 2.3 页面组件
 
 📋 下一步：
 1. 审查测试用例设计
@@ -158,23 +154,24 @@ invocable: true
 
 ### 命名规范
 
-#### 后端测试方法（通用格式）
-```
-格式: test_{方法名}_{场景}_{期望结果}
+#### Java测试方法
+```java
+// 格式: test_{方法名}_{场景}_{期望结果}
+@Test
+public void test_createOrder_validInput_success() { }
 
-示例:
-test_createOrder_validInput_success
-test_createOrder_nullInput_throwsException
-test_createOrder_insufficientStock_throwsException
+@Test
+public void test_createOrder_nullInput_throwsException() { }
+
+@Test
+public void test_createOrder_insufficientStock_throwsException() { }
 ```
 
-#### 前端测试（通用格式）
-```
-格式: should {期望行为} when {条件}
-
-示例:
-should display error message when form is invalid
-should submit form when all fields are valid
+#### 前端测试
+```javascript
+// 格式: should {期望行为} when {条件}
+it('should display error message when form is invalid', () => { });
+it('should submit form when all fields are valid', () => { });
 ```
 
 ### 测试用例ID规范
@@ -185,7 +182,7 @@ should submit form when all fields are valid
 | IT- | 集成测试 | IT-001, IT-002 |
 | API- | API测试 | API-001, API-002 |
 | FT- | 前端测试 | FT-001, FT-002 |
-| ST- | Store/状态测试 | ST-001, ST-002 |
+| ST- | Store测试 | ST-001, ST-002 |
 | E2E- | 端到端测试 | E2E-001, E2E-002 |
 | B- | 边界测试 | B-001, B-002 |
 | PT- | 性能测试 | PT-001, PT-002 |
@@ -226,7 +223,6 @@ should submit form when all fields are valid
 4. **快速反馈**: 单元测试应快速执行，便于频繁运行
 5. **有意义的断言**: 断言应该验证业务价值，而非实现细节
 6. **测试数据**: 使用明确的测试数据，避免魔法数字
-7. **技术栈适配**: 测试代码示例使用项目实际测试框架（参考 constitution.md）
 
 ## 示例输出
 

@@ -1,49 +1,49 @@
-# Acceptance Criteria Summary
+# 验收标准汇总
 
-> This document summarizes all acceptance criteria for user stories
+> 本文档汇总所有用户故事的验收标准
 
-## US-1: {user_story_title}
+## US-1: {用户故事标题}
 
-### Scenario 1: {scenario_description}
+### 场景1: {场景描述}
 
 ```gherkin
-Given {precondition}
-When {action}
-Then {expected_result}
-And {additional_verification}
+Given {前置条件}
+When {操作}
+Then {预期结果}
+And {额外验证}
 ```
 
-### Scenario 2: {scenario_description}
+### 场景2: {场景描述}
 
 ```gherkin
-Given {precondition}
-When {action}
-Then {expected_result}
-```
-
----
-
-## US-2: {user_story_title}
-
-### Scenario 1: {scenario_description}
-
-```gherkin
-Given {precondition}
-When {action}
-Then {expected_result}
+Given {前置条件}
+When {操作}
+Then {预期结果}
 ```
 
 ---
 
-## Acceptance Checklist
+## US-2: {用户故事标题}
 
-- [ ] US-1 All scenarios pass
-- [ ] US-2 All scenarios pass
-- [ ] US-3 All scenarios pass
-- [ ] Performance requirements met
-- [ ] Security requirements met
-- [ ] Compatibility requirements met
+### 场景1: {场景描述}
+
+```gherkin
+Given {前置条件}
+When {操作}
+Then {预期结果}
+```
 
 ---
 
-Back to [Specification Index](./README.md)
+## 验收标准检查清单
+
+- [ ] US-1 所有场景通过
+- [ ] US-2 所有场景通过
+- [ ] US-3 所有场景通过
+- [ ] 性能要求满足
+- [ ] 安全要求满足
+- [ ] 兼容性要求满足
+
+---
+
+返回 [规格索引](./README.md)

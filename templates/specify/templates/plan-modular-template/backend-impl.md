@@ -1,134 +1,286 @@
-# Backend Implementation Details
+# 后端实现细节
 
-> This document describes backend Service and Repository implementation
+> 本文档描述后端 Service 和 Repository 实现
 
-## 1. Service Layer Implementation
+## 1. Service 层实现
 
-### 1.1 Service Interface
+### 1.1 Service 接口
 
-**File Path**: `{backend_source_path}/services/{Name}Service.{ext}`
+**文件路径**: `cplm-pdm/.../service/{Name}Service.java`
 
-```{backend_language}
-// {Name}Service interface
-// - list(keyword, status, pageNum, pageSize) -> PageInfo
-// - getById(id) -> DTO
-// - create(request) -> id
-// - update(id, request)
-// - delete(id)
+```java
+public interface {Name}Service {
+
+    /**
+     * 查询列表
+     */
+    PageInfo<{Name}DTO> list(String keyword, String status, Integer pageNum, Integer pageSize);
+
+    /**
+     * 查询详情
+     */
+    {Name}DTO getById(Long id);
+
+    /**
+     * 创建
+     */
+    Long create({Name}RequestDTO request);
+
+    /**
+     * 更新
+     */
+    void update(Long id, {Name}RequestDTO request);
+
+    /**
+     * 删除
+     */
+    void delete(Long id);
+}
 ```
 
-### 1.2 Service Implementation
+### 1.2 Service 实现
 
-**File Path**: `{backend_source_path}/services/impl/{Name}ServiceImpl.{ext}`
+**文件路径**: `cplm-pdm/.../service/impl/{Name}ServiceImpl.java`
 
-```{backend_language}
-// {Name}ServiceImpl
-//
-// list():
-//   1. Build query conditions
-//   2. Execute paginated query
-//   3. Convert to DTOs
-//
-// create():
-//   1. Validate parameters
-//   2. Convert to entity
-//   3. Save to database
-//   4. Return ID
-//
-// update():
-//   1. Check resource exists
-//   2. Validate parameters
-//   3. Business rule validation
-//   4. Convert and update
-//
-// delete():
-//   1. Check resource exists
-//   2. Check can delete (dependency check)
-//   3. Execute delete
+```java
+@Service
+public class {Name}ServiceImpl implements {Name}Service {
+
+    @Autowired
+    private {Name}Repository repository;
+
+    @Override
+    public PageInfo<{Name}DTO> list(String keyword, String status, Integer pageNum, Integer pageSize) {
+        // 1. 构建查询条件
+        {Name}Query query = new {Name}Query();
+        query.setKeyword(keyword);
+        query.setStatus(status);
+
+        // 2. 分页查询
+        PageHelper.startPage(pageNum, pageSize);
+        List<{Name}Entity> entities = repository.selectByQuery(query);
+
+        // 3. 转换为DTO
+        List<{Name}DTO> dtos = entities.stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+
+        return new PageInfo<>(dtos);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long create({Name}RequestDTO request) {
+        // 1. 参数校验
+        validateRequest(request);
+
+        // 2. 转换为实体
+        {Name}Entity entity = toEntity(request);
+
+        // 3. 保存到数据库
+        repository.insert(entity);
+
+        return entity.getId();
+    }
+
+    private void validateRequest({Name}RequestDTO request) {
+        // 业务校验逻辑
+        if (StringUtils.isBlank(request.getName())) {
+            throw new BusinessException("名称不能为空");
+        }
+    }
+
+    private {Name}DTO toDTO({Name}Entity entity) {
+        // Entity -> DTO 转换
+        {Name}DTO dto = new {Name}DTO();
+        BeanUtils.copyProperties(entity, dto);
+        return dto;
+    }
+
+    private {Name}Entity toEntity({Name}RequestDTO request) {
+        // DTO -> Entity 转换
+        {Name}Entity entity = new {Name}Entity();
+        BeanUtils.copyProperties(request, entity);
+        return entity;
+    }
+}
 ```
 
-## 2. Repository/Data Access Layer Implementation
+## 2. Repository 层实现
 
-### 2.1 Repository Interface
+### 2.1 Repository 接口
 
-**File Path**: `{backend_source_path}/repositories/{Name}Repository.{ext}`
+**文件路径**: `cplm-pdm/.../repository/{Name}Repository.java`
 
-```{backend_language}
-// {Name}Repository interface
-// - selectByQuery(query) -> List<Entity>
-// - selectById(id) -> Entity
-// - insert(entity) -> int
-// - updateById(entity) -> int
-// - deleteById(id) -> int
+```java
+@Repository
+public interface {Name}Repository {
+
+    /**
+     * 根据查询条件查询列表
+     */
+    List<{Name}Entity> selectByQuery({Name}Query query);
+
+    /**
+     * 根据ID查询
+     */
+    {Name}Entity selectById(Long id);
+
+    /**
+     * 插入
+     */
+    int insert({Name}Entity entity);
+
+    /**
+     * 更新
+     */
+    int updateById({Name}Entity entity);
+
+    /**
+     * 删除
+     */
+    int deleteById(Long id);
+}
 ```
 
-### 2.2 Query Mapping
+### 2.2 MyBatis Mapper XML
 
-**File Path**: `{backend_source_path}/mappers/{Name}Mapper.{ext}`
+**文件路径**: `cplm-pdm/.../mapper/{Name}Mapper.xml`
 
-```{mapper_language}
-<!-- Result mapping for {table_name} -->
-<!-- Base columns: id, name, description, status, created_by, created_time, updated_by, updated_time -->
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cvte.cplm.pdm.repository.{Name}Repository">
 
-<!-- Query list with dynamic conditions (keyword search, status filter) -->
-<!-- Query by ID -->
-<!-- Insert -->
-<!-- Update (dynamic set) -->
-<!-- Delete -->
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.cvte.cplm.pdm.entity.{Name}Entity">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="created_time" property="createdTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, name, description, status, created_by, created_time, updated_by, updated_time
+    </sql>
+
+    <!-- 查询列表 -->
+    <select id="selectByQuery" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM {table_name}
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%')
+                     OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_time DESC
+    </select>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM {table_name}
+        WHERE id = #{id}
+    </select>
+
+    <!-- 插入 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO {table_name} (
+            name, description, status, created_by, created_time
+        ) VALUES (
+            #{name}, #{description}, #{status}, #{createdBy}, NOW()
+        )
+    </insert>
+
+    <!-- 更新 -->
+    <update id="updateById">
+        UPDATE {table_name}
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            updated_by = #{updatedBy},
+            updated_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除 -->
+    <delete id="deleteById">
+        DELETE FROM {table_name}
+        WHERE id = #{id}
+    </delete>
+
+</mapper>
 ```
 
-## 3. Entity/Model Classes
+## 3. 实体类
 
-**File Path**: `{backend_source_path}/models/{Name}Entity.{ext}`
+**文件路径**: `cplm-pdm/.../entity/{Name}Entity.java`
 
-```{backend_language}
-// {Name}Entity - maps to {table_name} table
-// Fields:
-// - id: primary key
-// - name: name
-// - description: description
-// - status: status
-// - createdBy: creator
-// - createdTime: creation time
-// - updatedBy: updater
-// - updatedTime: update time
+```java
+@Data
+@TableName("{table_name}")
+public class {Name}Entity {
+
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
+    private String name;
+
+    private String description;
+
+    private String status;
+
+    private String createdBy;
+
+    private LocalDateTime createdTime;
+
+    private String updatedBy;
+
+    private LocalDateTime updatedTime;
+}
 ```
 
-## 4. Business Logic Notes
+## 4. 业务逻辑说明
 
-### 4.1 Core Business Flows
+### 4.1 核心业务流程
 
-1. **Create Flow**:
-   - Parameter validation
-   - Business rule validation
-   - Data conversion
-   - Save to database
-   - Return ID
+1. **创建流程**:
+   - 参数校验
+   - 业务规则校验
+   - 数据转换
+   - 保存到数据库
+   - 返回ID
 
-2. **Update Flow**:
-   - Check resource exists
-   - Parameter validation
-   - Business rule validation
-   - Data conversion
-   - Update database
+2. **更新流程**:
+   - 检查资源是否存在
+   - 参数校验
+   - 业务规则校验
+   - 数据转换
+   - 更新数据库
 
-3. **Delete Flow**:
-   - Check resource exists
-   - Check can delete (dependency check)
-   - Execute delete
+3. **删除流程**:
+   - 检查资源是否存在
+   - 检查是否可删除（关联数据检查）
+   - 执行删除
 
-### 4.2 Transaction Management
+### 4.2 事务管理
 
-- All write operations (create, update, delete) use transactions
-- Query operations do not use transactions
-- Use default transaction propagation
+- 所有写操作（创建、更新、删除）使用 `@Transactional`
+- 查询操作不使用事务
+- 事务传播级别使用默认的 `REQUIRED`
 
-### 4.3 Exception Handling
+### 4.3 异常处理
 
-- Parameter errors: Throw validation exceptions
-- Business errors: Throw business exceptions
-- System errors: Throw system exceptions
+- 参数错误：抛出 `IllegalArgumentException`
+- 业务错误：抛出 `BusinessException`
+- 系统错误：抛出 `SystemException`
 
 ---
 
-Back to [Plan Index](./README.md)
+返回 [计划索引](./README.md)

@@ -42,7 +42,7 @@ invocable: true
 |------|------|--------|------|
 | 功能完整性 | ★★★ | ≥ 4/5 | spec 中定义的所有功能点是否都已实现？有无存根、TODO、占位符？ |
 | 需求一致性 | ★★★ | ≥ 4/5 | 实现是否与 spec/testcases/plan 的定义一致？有无偏离或遗漏？ |
-| 代码质量 | ★★ | ≥ 3/5 | 是否符合宪法约束？有无 N+1 查询？命名清晰？架构分层正确（参考 constitution.md）？ |
+| 代码质量 | ★★ | ≥ 3/5 | 是否符合宪法约束？有无 N+1 查询？命名清晰？架构分层正确？ |
 | 边界处理 | ★★ | ≥ 3/5 | spec 中的边界条件和异常场景是否覆盖？空数据、并发、权限等 |
 | 集成完整性 | ★★ | ≥ 3/5 | 前后端对接是否完整？API 调用链路是否通畅？数据流是否闭环？ |
 
@@ -147,11 +147,10 @@ invocable: true
    - 检查 plan 中定义的每个 API 端点是否都有对应实现
 
 2. **代码质量** (权重★★): 是否符合架构约束？有无 N+1 查询？命名清晰？
-   - 检查架构分层是否正确（参考 constitution.md）
+   - 检查 Controller → Service → Repository 分层是否正确
    - 检查是否存在 N+1 查询、SQL 注入风险
-   - 检查是否有重复代码、硬编码
    - 检查命名是否清晰、一致
-   - 检查是否有明显的性能问题
+   - 检查是否有重复代码、硬编码
 
 ## 输出格式
 
@@ -263,15 +262,16 @@ HIGHLIGHTS:
 对以下 2 个维度打分（1-5 分），每个分数必须提供具体论据：
 
 1. **集成完整性** (权重★★): 前后端对接是否完整？数据流是否闭环？
-   - 检查前端 API 调用是否与后端端点匹配
+   - 检查前端 API 调用是否与后端 Controller 端点匹配
    - 检查请求参数和响应格式是否与 API 设计一致
-   - 检查数据流是否闭环（用户操作 → API → 数据层 → 返回 → UI 更新）
+   - 检查数据流是否闭环（用户操作 → API → 数据库 → 返回 → UI 更新）
    - 检查错误码和异常处理是否贯穿前后端
 
-2. **架构合规** (权重★★): 是否符合宪法约束和项目架构原则？
-   - 检查是否遵循 constitution.md 中定义的架构模式
-   - 检查分层是否正确（参考 constitution.md）
-   - 检查数据访问层是否正确封装
+2. **架构合规** (权重★★): 是否符合宪法约束和 DDD 分层原则？
+   - Domain 层是否只依赖工具模块
+   - Application 层是否仅做服务编排
+   - Infrastructure 层是否仅依赖 Domain 层
+   - Repository 是否操作 Entity 对象，不直接操作 DO
 
 ## 输出格式
 
@@ -334,7 +334,7 @@ HIGHLIGHTS:
 
 ### 5. 生成最终评审报告
 
-保存到: `.specify/specs/{feature_id}/reviews/r{n}/arbitrate.md`
+保存到: `.specify/specs/{feature_id}/review-{phase}-r{n}.md`
 
 报告格式：
 
@@ -468,7 +468,7 @@ HIGHLIGHTS:
 
 修复完成后，**重新派发 3 个评审 Agent**（回到步骤 3）。
 
-### 增量评审模式（v5 新增）
+### 增量评审模式（v5 新增 / v6 增强）
 
 > R2+ 轮次不需要重新审查全部代码，只审查修复涉及的文件。
 
@@ -481,6 +481,28 @@ HIGHLIGHTS:
 3. 评审报告中标注"增量评审"，仅对修复部分评分
 4. 上一轮已 PASS 的维度保持不变，仅对修复涉及的维度重新评分
 
+### v6 R2+ 模式分流（新增）
+
+R2+ 评审根据上轮 fix 规模自动分流：
+
+| 上轮 fix 规模 | 评审模式 | Agent 派发 | 输入产物 | 输出产物 |
+|--------------|---------|-----------|---------|---------|
+| ≤3 文件 且 ≤50 行 | **轻量** | 1 个 review-r2-lite Agent + arbitrate（轻量模式） | `r{N-1}/fix-directives.md`、`r{N-1}/arbitrate.md`、修改文件 | `r{N}/agent-lite.md` + `r{N}/arbitrate.md` |
+| 否则 | **全量** | 3 个评审 Agent + arbitrate（全量模式） | 同 R1 | 同 R1 |
+
+**判定数据来源**：上一轮 `pipeline-state.json.fix_r{N-1}.modified_files` 与 `diff_lines`。
+
+### v6 交叉引用检查（R2+ MANDATORY）
+
+R2+ arbitrate 必须执行：
+- 提取上轮 fix 修改的所有文件（来自 `r{N-1}/fix-directives.md` 的「允许修改的文件」并集 + 实际 git diff）
+- 对每个文件，grep 上游引用：
+  - Java 类 → `grep -r "import.*\.{ClassName}" repo/{backend}/`
+  - 前端 Store/API/组件 → `grep -rE "(from.*['\"].*{filename})|({StoreName})|({apiPath})" repo/cap-front/src/ repo/cat-master/src/`
+- 任一上游引用文件未被本轮 review/lite 覆盖且接口签名/导出可能受影响 → 标记 `CROSS-REF-MISS-N`，自动按 HIGH 处理并追加为下一轮 FIX-N
+
+**为什么 R2+ 必做**：fix 改了 ServiceA 的接口签名 → ServiceB 调用方未被审查 → 编译级断裂被遗漏到上线。
+
 **迭代限制**: 最多 3 轮迭代。超过 3 轮后暂停，等待用户决策：
 - 继续迭代（用户确认）
 - 接受当前状态
@@ -488,22 +510,14 @@ HIGHLIGHTS:
 
 ## 评审报告存储
 
-评审报告按轮次存储，每轮包含各 Agent 的独立报告和仲裁结果：
+评审报告按轮次存储：
 
 ```
 .specify/specs/{feature_id}/
-├── reviews/
-│   ├── r1/
-│   │   ├── agent-a.md         # Agent A 严苛审查员报告
-│   │   ├── agent-b.md         # Agent B 需求守护者报告
-│   │   ├── agent-c.md         # Agent C 集成检查员报告
-│   │   └── arbitrate.md       # 仲裁合并结果（最终评审报告）
-│   ├── r2/
-│   │   ├── agent-a.md
-│   │   ├── agent-b.md
-│   │   ├── agent-c.md
-│   │   └── arbitrate.md
-│   └── ...
+├── review-phase1-r1.md    # Phase 1 第 1 轮评审
+├── review-phase1-r2.md    # Phase 1 第 2 轮评审（迭代后）
+├── review-phase2-r1.md    # Phase 2 第 1 轮评审
+└── review-final-r1.md     # 最终评审
 ```
 
 ## 与其他 SDD 步骤的关系
@@ -522,7 +536,7 @@ sdd-implement ──→ sdd-review ──→ iterate/complete
 | 功能缺失但 spec 中有定义 | implement（未完成） | L1 |
 | 功能缺失且 spec 中未定义 | spec → plan → tasks → implement | L2 |
 | 实现与 plan 设计不一致 | plan → implement | L1/L2 |
-| 代码质量问题 | implement | L1 |
+| 代码质量问题（N+1等） | implement | L1 |
 | 发现新边界条件 | spec → testcases → plan → implement | L2 |
 | 架构设计不合理 | plan → implement | L2/L3 |
 

@@ -1,27 +1,27 @@
-# Change Log
+# 变更记录
 
-> This document records version change history for the feature specification
+> 本文档记录功能规格的版本变更历史
 
-## Version History
+## 版本历史
 
-| Version | Date | Change | Changed By |
-|---------|------|--------|------------|
-| 1.0 | {date} | Initial version | {author} |
+| 版本 | 日期 | 变更内容 | 变更人 |
+|------|------|----------|--------|
+| 1.0 | {date} | 初始版本 | {author} |
 
-## Detailed Changes
+## 详细变更
 
-### v1.0 (Initial Version)
+### v1.0 (初始版本)
 
-**Added Features**:
-- Feature 1
-- Feature 2
-- Feature 3
+**新增功能**：
+- 功能点1
+- 功能点2
+- 功能点3
 
-**User Stories**:
-- US-1: {title}
-- US-2: {title}
-- US-3: {title}
+**用户故事**：
+- US-1: {标题}
+- US-2: {标题}
+- US-3: {标题}
 
 ---
 
-Back to [Specification Index](./README.md)
+返回 [规格索引](./README.md)

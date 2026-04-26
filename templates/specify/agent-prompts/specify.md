@@ -20,12 +20,26 @@
 1. `.specify/memory/constitution.md` — 项目宪法
 2. `CLAUDE.md` — 项目配置
 3. `.specify/specs/{feature_id}/requirements/clarification.md` — 需求澄清记录
-4. `.specify/specs/{feature_id}/requirements/original.md` — 原始需求
+4. `.specify/specs/{feature_id}/requirements/original.md` — KB 原始需求
 
 ## 第三步：执行并保存
 
 按 Skill 文件中的执行步骤生成功能规格，将结果写入：
 `.specify/specs/{feature_id}/spec.md`
+
+**大小检查**：如果 spec.md 超过 500 行，在文档末尾添加：
+```
+> ⚠️ 文档超过 500 行，建议拆分为模块化结构。
+```
+
+## ⚠️ 铁律：Spec 只描述 What，不描述 How
+
+以下内容**绝对不允许**出现在 spec.md 中：
+- ❌ SQL 查询语句或 DDL
+- ❌ 代码片段（Java/JavaScript/任何语言）
+- ❌ 具体文件路径（如 `src/pages/xxx/CreateModal.jsx`）
+- ❌ 类名、方法名（如 `findEarliestSubTaskId()`）
+- ❌ 修改文件清单
 
 ## Agent 执行约束
 

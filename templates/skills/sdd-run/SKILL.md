@@ -1,18 +1,20 @@
 ---
 name: sdd-run
-description: SDD v5 全自动执行流水线 - Agent-Per-Phase 架构，实现自审门禁，需求澄清强化，评审阈值优化
+description: SDD v6 全自动执行流水线 - Agent-Per-Phase + B1/B2 前后端拆分 + Phase D 知识提取
 invocable: true
 ---
 
-# SDD Run v5 — Agent-Per-Phase 全自动流水线
+# SDD Run v6 — Agent-Per-Phase + 前后端拆分 + 自进化
 
-> **v5 核心改进（基于 v4 测评优化）**：
-> 1. 需求澄清强化：选择题优先、多轮追问、不急于结束
-> 2. 实现自审门禁：Implement Agent 完成后必须自审，对照 spec/plan 逐项核对
-> 3. 评审阈值优化：从"全 5 分"调整为"≥ 4 + 无 HIGH 确认问题"，减少无效迭代
-> 4. 增量评审：R2+ 只审查修复涉及的文件
-> 5. 流水线状态持久化：pipeline-state.json 支持精确恢复
-> 6. 文件完整性校验：Agent 产出文件结构验证
+> **v6 核心改进**（基于 2026-04-24 实战诊断）：
+> - **Phase B 前后端拆分**：B1 后端 → 写 api-contract-actual.md → B2 前端，根除 context 爆炸
+> - **R2+ 轻量评审分流**：fix ≤3 文件且 ≤50 行 → 单 Agent 评审，节省 ~10min/轮
+> - **arbitrate 交叉引用检查**：R2+ 仲裁追踪上游引用，消除接口断裂盲区
+> - **Phase D 知识提取**：Pipeline 收尾自动写 `iteration-patterns.md`（硬上限 50 条 + 晋升即淘汰）
+> - **Pipeline 收尾自动化**：清理 .backup、生成 README、更新 REGISTRY、生成 iterations/INDEX
+> - **Agent 级耗时埋点**：每个 sub-agent 独立 duration_sec
+>
+> **v5.1 沿用**：编译验证门禁、设计偏离豁免、代码级假设验证、增量评审、需求澄清强化
 
 ## 核心原则
 
@@ -20,9 +22,8 @@ invocable: true
 2. **Agent 隔离**：每个阶段独立 Agent，独立上下文窗口，不累积上下文
 3. **文档驱动**：Agent 之间通过文件产物传递上下文，主进程不读文档内容
 4. **一次做对**：Implement Agent 含自审门禁，对照 spec/plan 逐项核对后才算完成
-5. **评审务实**：功能+需求 ≥ 4 且无 HIGH 确认问题即 PASS，MEDIUM/LOW 记录不阻塞
-6. **评审隔离**：每个评审 Agent 只写报告文件，仲裁 Agent 从文件读取综合评判
-7. **人类主权**：Phase 0 需求澄清充分交互，L3 问题暂停等人类决策
+5. **评审务实**：功能+需求 ≥ 4 且无 HIGH 确认问题即 PASS
+6. **人类主权**：Phase 0 需求澄清充分交互，L3 问题暂停等人类决策
 
 ## 前置条件
 
@@ -34,8 +35,8 @@ invocable: true
 ```
 /sdd-run {feature_id} {功能描述或知识库链接}
 /sdd-run {feature_id} --from {stage}     # 从指定阶段恢复
-/sdd-run {feature_id} --bugfix {描述}    # 在已有需求目录下记录bug修复（跳过评审）
-/sdd-run {feature_id} --patch {描述}     # 在已有需求目录下记录小优化（跳过评审）
+/sdd-run {feature_id} --bugfix {描述}    # bug修复（跳过评审）→ 按需读取 bugfix-patch.md
+/sdd-run {feature_id} --patch {描述}     # 小优化（跳过评审）→ 按需读取 bugfix-patch.md
 ```
 
 **feature_id 命名规范**：三位数字编号自增（001, 002, 003...），目录格式 `{id}-{name}/`
@@ -45,268 +46,33 @@ invocable: true
 所有编号必须在已有基础上自增，**禁止手动指定或跳号**：
 
 1. **spec 目录编号**：扫描 `.specify/specs/` 下已有目录，取最大编号 +1
-   ```bash
-   # 示例：已有 001, 002, 003, 004, 005, 007, 008 → 新建 009
-   ls .specify/specs/ | grep -oP '^\d{3}' | sort -n | tail -1  # → 008, 新建 009
-   ```
-2. **iterations 编号**：扫描目标目录 `iterations/` 下已有文件，取最大编号 +1
-   ```bash
-   # 示例：已有 iter-001, iter-002, iter-003 → 新建 iter-004
-   ls {feature_dir}/iterations/ | grep -oP 'iter-\K\d{3}' | sort -n | tail -1  # → 003, 新建 iter-004
-   ```
-3. **v{N} 子目录编号**：扫描目标目录下已有的 v{N} 目录，取最大编号 +1
-   ```bash
-   # 示例：已有 v2/ → 新建 v3/
-   ls -d {feature_dir}/v*/ 2>/dev/null | grep -oP 'v\K\d+' | sort -n | tail -1  # → 2, 新建 v3
-   ```
+2. **iterations 编号**：扫描 `iterations/` 下已有文件，取最大编号 +1
+3. **v{N} 子目录编号**：扫描已有 v{N} 目录，取最大编号 +1
 
 ---
 
-## ⚠️ 需求归属规则（防止目录混乱）
+## ⚠️ 需求归属规则
 
-> **核心原则**：对已有需求的 bug 修复、小优化、功能增强，必须在原需求目录下迭代，禁止新建独立的 spec 目录。
+> 对已有需求的 bug 修复、小优化、功能增强，必须在原需求目录下迭代，禁止新建独立的 spec 目录。
 
 ### 判断流程
 
-在 Phase 0 开始前，主进程必须执行归属判断：
-
-1. **扫描已有 spec 目录**：列出 `.specify/specs/` 下所有已有目录
+1. **扫描已有 spec 目录**：`ls .specify/specs/`
 2. **语义匹配**：判断新需求是否属于已有需求的 bug/优化/增强
-3. **归属决策**：
-   - ✅ **归入已有目录**：bug 修复、小优化、功能增强、UI 调整
-   - ✅ **新建目录**：全新的独立功能，与现有需求无业务关联
+3. **归属决策**：归入已有目录 or 新建目录
 
 ### 归入已有目录时的处理
 
-当判定为已有需求的迭代时：
+1. **文档存放**：在原目录下创建 `iterations/iter-{NNN}-{name}.md`
+2. **迭代文件格式**：包含类型、日期、关联原需求、在原文档中的定位、变更内容、影响范围
+3. **双向索引（必须）**：创建迭代文件后，同时更新原 spec.md 末尾的迭代索引表
+4. **跳过评审**：`--bugfix` / `--patch` 跳过完整评审流程
 
-1. **文档存放**：在原需求目录下创建迭代文件，使用后缀区分：
-   ```
-   .specify/specs/003-xxx/
-   ├── spec.md                    # 原始规格
-   ├── plan.md                    # 原始计划
-   ├── tasks.md                   # 原始任务
-   ├── iterations/                # 迭代记录目录
-   │   ├── iter-001-{name}.md     # bug修复记录
-   │   ├── iter-002-{name}.md     # 优化记录
-   │   └── ...
-   ```
+**当判定为 bugfix/patch 时**：读取 `.claude/skills/sdd-run/bugfix-patch.md` 获取详细修复流程和 Agent 派发模板。
 
-2. **迭代文件格式**（`iter-{NNN}-{name}.md`）：
-   ```markdown
-   # 迭代记录: {描述}
-   
-   - 类型: bugfix / patch / enhancement
-   - 日期: {date}
-   - 关联原需求: {feature_id}
-   - 关联原文档位置: spec.md §{章节} / plan.md §{章节}（指明修复的是原文档的哪个功能点）
-   
-   ## 问题描述
-   {问题或优化点}
-   
-   ## 在原文档中的定位
-   - 原 spec 中的相关描述: spec.md §三.功能需求 → US-{N} / 功能点 {name}
-   - 原 plan 中的相关设计: plan.md §{章节} → {具体方法/模块}
-   （说明这个 bug/优化 是基于原文档的哪个功能点产生的）
-   
-   ## 变更内容
-   {修改了什么}
-   
-   ## 影响范围
-   {影响的文件和功能}
-   ```
+**当涉及无 SDD 文档的旧功能时**：读取 `.claude/skills/sdd-run/api-trace.md` 获取 API 链路追踪流程。
 
-3. **双向索引（必须）**：
-
-   > **核心原则**：新文档引用原文档（正向），原文档也必须记录迭代（反向）。任何人读原文档时，能看到所有后续的修改记录。
-   
-   **创建迭代文件后，必须同时更新原文档**：
-   
-   a) **更新 spec.md** — 在末尾的「变更记录」或「迭代索引」章节追加一行：
-   ```markdown
-   ## 迭代索引
-   
-   | 编号 | 类型 | 日期 | 描述 | 文档 |
-   |------|------|------|------|------|
-   | iter-001 | bugfix | 2026-04-09 | xxx修复 | [详情](iterations/iter-001-xxx.md) |
-   | v2 | enhancement | 2026-04-07 | xxx增强 | [详情](v2/spec.md) |
-   ```
-   
-   如果 spec.md 中没有「迭代索引」章节，创建一个并追加到文档末尾。
-   
-   b) **更新 plan.md / tasks.md**（如果迭代涉及对应内容）— 同理追加索引。
-   
-   c) **v{N} 子目录同理** — 在原 spec.md 的迭代索引中记录 v{N} 的条目。
-
-4. **跳过评审**：bug 修复和小优化（`--bugfix` / `--patch`）跳过完整评审流程，但文档和双向索引必须保留
-
-5. **大型增强**：如果迭代内容较大（新增多个功能点），在原目录下建 `v{N}/` 子目录：
-   ```
-   .specify/specs/003-xxx/
-   ├── spec.md                    # v1 原始规格
-   ├── v2/                        # 大型增强 v2（独立子目录）
-   │   ├── spec.md                # 增量规格（索引回 ../spec.md）
-   │   ├── testcases.md
-   │   ├── plan.md                # 增量计划（索引回 ../plan.md）
-   │   ├── tasks.md
-   │   └── reviews/
-   ├── v3/                        # 后续大型增强（如有）
-   │   └── ...
-   ├── iterations/                # 小型 bug/优化记录
-   │   └── ...
-   ```
-   
-   **v{N} 子目录的文档规则**：
-   - 文档内容是**增量补充**，不重复原文件中已有的内容
-   - 每个文档顶部必须索引回原文件：`> 基于 [原始规格](../spec.md)，以下为 v2 增量变更`
-   - **原文件必须反向索引**：在原 spec.md 的「迭代索引」中追加 v{N} 条目
-   - 走完整 SDD 流程（specify → testcases → plan → tasks → implement → review）
-   - 评审范围仅覆盖 v{N} 的增量代码，不重复评审 v1 已通过的部分
-
-5. **Bugfix/Patch Agent 派发**（主进程或 Agent 模式）：
-
-   当判定为 bugfix/patch 时，如果使用 Agent 执行，prompt 必须包含以下指令：
-
-   ```python
-   Agent(
-       name = "sdd-bugfix",
-       subagent_type = "general-purpose",
-       description = "SDD-Bugfix",
-       prompt = """
-   你是 SDD bug 修复执行器。
-
-   ⚠️ 铁律：先读文档定位代码，禁止跳过文档直接搜索！
-
-   第一步（必须！）：读取已有文档定位代码
-   - 读取 .specify/specs/{feature_id}/plan.md → 找到相关模块的文件路径和方法名
-   - 读取 .specify/specs/{feature_id}/tasks.md → 找到相关任务涉及的文件清单
-   - 读取 .specify/specs/{feature_id}/spec.md → 找到相关功能点的业务规则
-   - 读取 .specify/specs/{feature_id}/iterations/ 下已有文件 → 找到相关的历史修复
-
-   第二步：根据文档中的路径精准定位
-   - 直接 Read 文档中提到的目标文件，不要做宽泛的全项目搜索
-   - 如果文档路径已过时，用文档中的方法名/类名做精准搜索
-
-   第三步：分析根因并修复
-
-   第四步：创建迭代记录
-   - .specify/specs/{feature_id}/iterations/iter-{NNN}-{name}.md
-   - 必须填写「在原文档中的定位」章节（引用 plan.md/spec.md 的具体章节）
-   - 更新原 spec.md 的迭代索引（双向索引）
-
-   Bug 描述: {描述}
-   """
-   )
-   ```
-
-4. **大型增强**：如果迭代内容较大（新增多个功能点），仍需走完整 SDD 流程，但文档存放在原需求目录下的版本子目录中（见上方 v{N} 子目录规则）。
-
-### Bugfix/Patch 文档优先修复流程（v5 新增）
-
-> **核心原则：先读文档定位，再改代码。禁止跳过文档直接全量搜索代码。**
->
-> plan.md 中已记录完整的文件路径、API 设计、调用链路，是最好的"代码导航地图"。
-> 直接全量搜索代码会浪费大量上下文在无关文件上，导致简单问题复杂化。
-
-#### 修复步骤（严格按顺序执行）
-
-```
-步骤 1: 读文档定位（必须！）
-  ├── 读取 plan.md → 找到相关模块的文件路径、方法名、调用链路
-  ├── 读取 spec.md → 找到相关功能点的业务规则
-  ├── 读取 tasks.md → 找到相关任务涉及的文件清单
-  └── 读取已有的 iterations/ → 找到相关的历史修复记录
-  
-步骤 2: 精准定位代码
-  ├── 根据文档中的文件路径，直接 Read 目标文件
-  ├── 如果文档路径已过时，用文档中的方法名/类名做精准 Grep
-  └── 禁止：在没有读文档的情况下做宽泛的代码搜索
-
-步骤 3: 分析根因
-  ├── 对照 spec 的业务规则理解预期行为
-  ├── 对照 plan 的技术设计理解实现意图
-  └── 定位代码中的偏差点
-
-步骤 4: 修复代码
-
-步骤 5: 记录迭代文档
-  ├── 创建 iterations/iter-{NNN}-{name}.md
-  ├── 必须填写「在原文档中的定位」章节
-  └── 更新原 spec.md 的迭代索引（双向索引）
-```
-
-#### 文档查找优先级
-
-| 优先级 | 信息来源 | 能找到什么 |
-|--------|---------|-----------|
-| 1 | `plan.md` | 文件路径、方法名、API 路径、调用链路、数据模型 |
-| 2 | `tasks.md` | 每个 Task 涉及的文件清单、实现细节 |
-| 3 | `iterations/` | 历史修复涉及的文件、根因分析 |
-| 4 | `spec.md` | 业务规则、功能点列表 |
-| 5 | **API 链路追踪** | 动态字段定义、后端数据模型、实际接口响应（见下方详细说明） |
-| 6 | 代码搜索 | 仅当以上方式都不足时才使用 |
-
-### API 链路追踪（v5.1 新增）
-
-> **适用场景**：涉及已有功能的修改/优化，但该功能没有 SDD 文档，或文档不完整。
->
-> **核心思路**：沿着前端 → BFF → 后端的 API 调用链路，定位数据来源和字段定义，最终通过**调用实际 API** 获取真实数据结构。
-
-#### 何时使用
-
-- 需要修改的功能是 SDD 流程引入之前开发的（无 spec/plan 文档）
-- 文档中的字段描述不完整（如只有中文名，缺少 apiName）
-- 数据来自后端动态配置，前端不硬编码
-- 知识库文档过时，数据库 MCP 不可用
-
-#### 追踪步骤
-
-```
-步骤 1: 从 URL/页面定位前端组件
-  ├── 解析页面 URL 路径 → 匹配路由配置 → 找到页面组件
-  ├── 在页面组件中找到目标区域（如表格、表单）使用的子组件
-  └── 产出：目标组件文件路径、渲染逻辑
-
-步骤 2: 从组件定位 API 调用
-  ├── 在组件或 Store 中找到数据获取方法
-  ├── 提取 API Key 或 API 路径
-  └── 产出：API Key、Store 方法名
-
-步骤 3: 从 API Key 定位后端路径
-  ├── 在 BFF 路由配置中搜索 API Key
-  ├── 找到实际的 HTTP 方法和 URI 路径
-  └── 产出：后端 API 路径
-
-步骤 4: 调用实际 API 获取真实数据
-  ├── 使用项目配置的 API 调试工具直接调用后端 API
-  ├── 从响应数据中提取所需的字段定义
-  └── 产出：完整的字段列表、数据结构、实际值
-
-步骤 5:（可选）追踪到后端代码
-  ├── 根据 API 路径搜索 Controller/Service
-  ├── 找到数据模型定义
-  └── 产出：后端业务逻辑、数据来源
-```
-
-#### 与文档优先流程的关系
-
-API 链路追踪**不替代**文档优先流程，而是**补充**它：
-
-```
-有 SDD 文档的功能 → 文档优先流程（读 plan.md/spec.md）
-无 SDD 文档的功能 → API 链路追踪（从前端 URL 出发追踪到后端）
-两者结合         → 文档定位大方向 + API 追踪确认细节（如动态字段的 apiName）
-```
-
-> **深度追踪**：如需全链路梳理（含后端 Controller → Service → Mapper → DB），
-> 可使用 `feature-trace` skill 进行完整的功能架构分析并输出文档。
-
-### 反面示例
-
-| 错误做法 | 正确做法 |
-|----------|----------|
-| 为已有需求的 bug 新建独立 spec 目录 | 在原需求目录的 `iterations/iter-{NNN}-{name}.md` 记录 |
-| 为已有需求的优化新建独立 spec 目录 | 在原需求目录的 `iterations/iter-{NNN}-{name}.md` 记录 |
+**大型增强**：仍需走完整 SDD 流程，文档存放在 `v{N}/` 子目录中。详见 `bugfix-patch.md`。
 
 ---
 
@@ -316,898 +82,569 @@ API 链路追踪**不替代**文档优先流程，而是**补充**它：
 
 ```
 主进程（轻量编排器）
-│  职责：派发 Agent、检查文件存在、读结论行、控制迭代
-│  不读文档内容、不累积上下文
+│  职责：派发 Agent、检查文件存在、读结论行、控制迭代、写 REGISTRY
 │
 ├── Phase 0: 需求澄清（主进程 — 唯一人类交互）
 │
-├── Agent: Specify → spec.md
-├── Agent: Testcases → testcases.md
-├── Agent: Plan → plan.md
-├── Agent: Tasks → tasks.md
+├── Phase A: 规划器
+│   ├── A1 Agent: Specify+Testcases → spec.md + testcases.md
+│   └── A2 Agent: Plan+Tasks → plan.md (含「关键文件索引」+「Fix 白名单预设」) + tasks.md
 │
-├── Agent: Implement（不拆分，内部严格串行）
+├── Worktree Setup：为涉及的 repo 创建 git worktree
 │
-├── 评审循环（最多 3 轮）：
-│   ├── Agent: Review-A → reviews/r{n}/agent-a.md     ─┐
-│   ├── Agent: Review-B → reviews/r{n}/agent-b.md      │ 并行
-│   ├── Agent: Review-C → reviews/r{n}/agent-c.md     ─┘
-│   ├── Agent: Arbitrate → reviews/r{n}/arbitrate.md
-│   │   ├── PASS → reviews/summary.md → 结束
-│   │   └── ITERATE → reviews/r{n}/fix-directives.md
-│   │       └── Agent: Fix → 回到评审循环
+├── Phase B: 执行器（v6 拆分）
+│   ├── 判定：plan.md 包含的项目类型
+│   │   ├── 仅后端 → B-only（implement-backend.md）
+│   │   ├── 仅前端 → B-only（implement-frontend.md）
+│   │   ├── 跨前后端 → B1 后端 → 输出 api-contract-actual.md → B2 前端
+│   │   └── 既无前端段也无后端段（小修复） → 兼容路径 implement.md（单 Agent）
+│   └── 每个 Implement Agent 含编译/Lint 自审门禁
 │
-└── 最终报告 → 人类验收
+├── Phase C: 评审循环（最多 3 轮）
+│   ├── R1: 三 Agent 全量并行评审 + arbitrate
+│   ├── ITERATE → Fix Agent（白名单铁律 + OPT 跳过）
+│   ├── R2+ 评审模式分流：
+│   │   ├── fix ≤3 文件且 ≤50 行 → review-r2-lite (单 Agent) → arbitrate 轻量模式
+│   │   └── 否则 → 三 Agent 全量评审
+│   └── R2+ arbitrate 强制交叉引用检查
+│
+├── Phase D: 知识提取（v6 新增，最终 PASS 后触发）
+│   └── knowledge-extract Agent → 写回 iteration-patterns.md（硬上限 50）
+│
+└── Pipeline 收尾自动化
+    ├── 清理 .backup 文件
+    ├── 写/更新 specs/{id}/README.md
+    ├── 更新 REGISTRY.md
+    └── 生成 iterations/INDEX.md（如有 iterations/）
 ```
 
 ---
 
 ### Phase 0: 需求澄清（主进程执行）
 
-> 全流程中**最重要的人类交互环节**。澄清的质量直接决定最终实现的质量。
 > **宁可多问一轮，不可带着模糊需求进入自动流程。**
 
 #### 0.0 需求归属判断
 
-> **在任何其他步骤之前执行**，防止目录混乱。
-
-1. **扫描已有 spec 目录**：`ls .specify/specs/`
-2. **读取每个已有 spec 的标题和描述**（读取 `spec.md` 前几行即可）
-3. **判断新需求是否属于已有需求的 bug/优化/增强**
-4. **如果判定为已有需求的迭代**：
-   - 告知用户："这属于 `{original_feature_id}` 的迭代，将在原目录下记录"
-   - 使用 `--bugfix` / `--patch` 模式
-   - **执行文档优先修复流程**（见上方「Bugfix/Patch 文档优先修复流程」）
-   - 在原目录下创建 `iterations/iter-{NNN}-{name}.md`
-   - **流程结束**：不进入 Phase A/B/C
-5. **如果涉及已有功能但无 SDD 文档**（SDD 引入前的旧功能）：
-   - **执行 API 链路追踪流程**（见上方「API 链路追踪」章节）
-   - 先理清现有实现的组件结构、API 链路、数据字段
-   - 再决定：简单修改直接实现 / 复杂变更进入完整 SDD 流程
-6. **如果判定为全新功能**：继续正常的 Phase 0 → A → B → C 流程
+1. 扫描已有 spec 目录，读取 spec.md 前几行
+2. 判断新需求是否属于已有需求的迭代
+3. 如果是 → 按 bugfix/patch 处理（读取 `bugfix-patch.md`）
+4. 如果涉及旧功能无 SDD 文档 → 读取 `api-trace.md` 先理清现有实现
+5. 如果是全新功能 → 继续 Phase 0 → A → B → C
 
 #### 0.1 需求预分析
 
-1. **解析输入**：提取功能名称、描述、知识库链接、页面 URL（如有）
-2. **获取知识库文档**（如有链接）：如果项目配置了知识库 MCP 工具（如 Confluence），使用对应工具获取原始需求
-3. **读取项目上下文**：
-   - `.specify/memory/constitution.md`（技术栈约束）
-   - `CLAUDE.md`（项目配置）
-   - 同模块已有的 spec 文档（如有）
-4. **扫描相关代码**（如涉及现有模块）：了解当前实现状态
-5. **API 链路追踪**（如涉及已有功能且无 SDD 文档）：
-   - 从页面 URL 定位前端组件 → 找到 API 调用 → 追踪到 BFF 和后端
-   - 如需确认动态字段（如列名、属性名），直接调用 API 获取真实响应
-   - 详见「API 链路追踪」章节
+1. 解析输入（功能名称、描述、KB 链接、页面 URL）
+2. 获取 KB 文档（如有链接）
+3. 读取项目上下文：constitution.md、CLAUDE.md
+4. **扫描相关代码**：使用 `Agent(subagent_type="Explore")` 扫描现有实现，主进程只接收摘要，避免代码内容污染上下文
 
-#### 0.2 生成澄清问题（结构化选择题优先）
+#### 0.2 生成澄清问题
 
-基于预分析结果，列出需要确认的问题。**只问真正不确定的**，不问文档中已明确的内容。
+**核心原则：让用户选择，而不是让用户写答案。** 每个问题提供 2-4 个选项。
 
-**⚠️ 核心原则：让用户选择，而不是让用户写答案**
+使用 AskQuestion 工具或格式化选择题（`Q1-A, Q2-B`）。标注 [必答]/[可选]，提供推荐选项。
 
-每个问题必须提供 **2-4 个具体选项**，用户直接选择即可。开放式问题只用于无法预设选项的场景。
+#### 0.3 多轮澄清
 
-**使用 AskQuestion 工具提问**（如果环境支持），或使用以下格式：
+**禁止一轮就结束澄清。** 用户回答后必须检查是否有新的不确定项。
 
-```
-━━━ 需求澄清（第 1 轮）━━━
+**澄清完成标准**（全部满足）：
+1. 所有 [必答] 问题已有明确答案
+2. 业务范围和排除项已确认
+3. 核心业务规则已确认
+4. 用户回答中没有引出新的不确定项
+5. 复述理解后用户确认无误
 
-我已分析你的需求「{功能描述}」，以下问题需要确认：
+#### 0.4 澄清完成
 
-【必答】
-Q1. {问题}
-   A) {选项1}（推荐）
-   B) {选项2}
-   C) {选项3}
-   → 默认选 A，如果都不对请说明
+保存到 `clarification.md`，复述完整理解，等用户确认后进入自动模式。
 
-Q2. {问题}
-   A) {选项1}
-   B) {选项2}
+#### 0.5 取号原子化（多人并发防冲突）
 
-【可选】
-Q3. {问题}
-   A) {选项1}（推荐）
-   B) {选项2}
-   → 不回答则按 A 处理
+> **必须执行**：进入 Phase A 前，主进程在 master 上完成"取号 + 占位 push"，避免多人并行 SDD 时撞号。
+> 详细流程见 `.claude/skills/sdd-specify/SKILL.md` §6.3。
 
-请回复选项编号（如 Q1-A, Q2-B），或补充你认为重要的信息。
-```
+主进程在此处执行：
+1. `git pull --rebase origin master`
+2. 扫描 `.specify/specs/` 取最大编号 N，候选 `feature_id = N+1`
+3. `mkdir .specify/specs/{feature_id}-{name}/`，把 `clarification.md` 移入
+4. 在 `REGISTRY.md` 追加 DRAFT 行
+5. 独立 commit：`chore(sdd): reserve {feature_id}-{name}`
+6. `git push origin master`
+   - 失败（non-fast-forward）→ 按 §6.3 冲突恢复流程重试，**最多 3 次**
+   - 3 次仍失败 → 报错停止 pipeline，提示用户手动协调
 
-**典型问题分类**：
-
-| 分类 | 问题示例 | 选项示例 |
-|------|----------|----------|
-| 业务范围 | 这个功能的影响范围？ | A) 仅新增页面 B) 修改现有页面 C) 新增+修改 |
-| 规则确认 | 对比的基准如何确定？ | A) 用户手动选择 B) 系统自动取最新版 C) 取已发布版 |
-| 数据来源 | 数据从哪获取？ | A) 复用现有 API B) 新建 API C) 组合多个现有 API |
-| 边界条件 | 最多支持多少条数据？ | A) 10 条 B) 50 条 C) 100 条 D) 不限 |
-| 排除项 | 以下哪些不在本次范围？ | A) 导出功能 B) 权限控制 C) 都需要 |
-| 非功能需求 | 性能要求？ | A) 1秒内响应 B) 3秒内 C) 无特殊要求 |
-
-#### 0.3 澄清规则
-
-- **选择题优先**：80% 以上的问题必须是选择题，用户选编号即可
-- **标注优先级**：关键问题标注 [必答]，次要问题标注 [可选，默认X]
-- **提供推荐选项**：基于预分析给出推荐选项，标注 "（推荐）"
-- **已有答案不问**：知识库文档或现有代码中已明确的信息不重复确认
-- **逐步深入**：第一轮问方向性问题，用户回答后如有不清楚的细节，进行第二轮追问
-- **不急于结束**：如果用户的回答引出了新的不确定项，**必须追问**，不要假设
-
-#### 0.4 多轮澄清与确认
-
-> **禁止一轮就结束澄清。** 用户回答第一轮后，必须检查是否有新的不确定项。
-
-**澄清完成的标准**（全部满足才可结束）：
-1. ✅ 所有 [必答] 问题已有明确答案
-2. ✅ 业务范围和排除项已确认（做什么 + 不做什么）
-3. ✅ 核心业务规则已确认（不存在模糊的业务逻辑）
-4. ✅ 用户回答中没有引出新的不确定项
-5. ✅ 复述理解后用户确认无误
-
-**多轮澄清流程**：
-
-```
-第 1 轮: 预分析 → 生成选择题 → 用户选择
-         ↓
-检查: 用户回答是否引出新问题？
-         ↓ 是
-第 2 轮: 追问新问题 → 用户回答
-         ↓
-检查: 还有不确定项吗？
-         ↓ 否
-复述理解 → 用户确认 → 进入自动模式
-```
-
-#### 0.5 澄清完成
-
-**所有澄清标准满足后**：
-1. 整理澄清结论，保存到 `.specify/specs/{feature_id}/requirements/clarification.md`
-2. **复述完整理解**，包括：做什么、不做什么、核心规则、边界条件
-3. **等待用户确认** "理解正确" 后才进入自动模式
-
-```
-✅ 需求澄清完成，我的理解是：
-
-📋 功能范围:
-  - 要做: {功能点1}, {功能点2}, ...
-  - 不做: {排除项1}, {排除项2}, ...
-
-📐 核心规则:
-  - {规则1}
-  - {规则2}
-
-⚠️ 边界条件:
-  - {边界1}
-  - {边界2}
-
-请确认以上理解是否正确？确认后我将全自动执行，不再打扰。
-```
-
-**用户确认后**：
-```
-🚀 开始全自动执行（v5 架构）
-  每个阶段由独立 Agent 执行，实现阶段含自审门禁。
-  过程中如有 L3 级方向性问题会暂停，否则一路到底。
-```
+取号成功后,后续 Phase A/B/C/D 派发的 Agent prompt 中传入的 `feature_id` 即为已抢占的号,所有产出物落在已 push 的目录下。
 
 ---
 
-### Phase A: 规划器（4 个串行 Agent）
+### Phase A: 规划器（2 个串行 Agent）
 
-每个 Agent 独立派发，独立上下文窗口。Agent 完成后主进程只检查文件是否存在。
+> 每个 Agent 独立上下文窗口，完成后主进程只检查文件存在。
+> **路径规则**：主进程派发 Agent 时，prompt 首行声明项目根目录的绝对路径。
+> **Worktree 映射**：Phase B/C 的 Agent prompt 中注入实际路径映射表。
 
-> **关键**：每个 Agent 的 prompt 告诉它"先读指令文件，再按指令执行"。
-> 指令文件路径：`.specify/templates/agent-prompts/{stage}.md`
+#### A1. Agent: Specify + Testcases
 
-#### A1. Agent: Specify
+派发参数：
+- name: `sdd-specify-testcases`
+- subagent_type: `general-purpose`
+- description: `SDD-Specify+Testcases`
 
-使用 Agent 工具派发：
+Agent prompt 要点：
+1. 首行声明 `项目根目录: {PROJECT_ROOT}`
+2. 读取指令文件：`.specify/templates/agent-prompts/specify-testcases.md`
+3. 输入文件：constitution.md、CLAUDE.md、clarification.md
+4. 产出：`spec.md` + `testcases.md`
+5. 完成回复："spec.md 和 testcases.md 已保存"
 
-```python
-Agent(
-    name = "sdd-specify",
-    subagent_type = "general-purpose",
-    description = "SDD-Specify",
-    prompt = """
-你是 SDD 功能规格生成器。
+**主进程检查**：确认两个文件均已生成。
 
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/specify.md
+#### A2. Agent: Plan + Tasks
 
-第二步：按指令执行，需要读取的项目文件：
-- .specify/memory/constitution.md
-- CLAUDE.md
-- .specify/specs/{feature_id}/requirements/clarification.md（如有）
+派发参数：
+- name: `sdd-plan-tasks`
+- subagent_type: `general-purpose`
+- description: `SDD-Plan+Tasks`
 
-第三步：将功能规格写入：
-.specify/specs/{feature_id}/spec.md
+Agent prompt 要点：
+1. 首行声明 `项目根目录: {PROJECT_ROOT}`
+2. 读取指令文件：`.specify/templates/agent-prompts/plan-tasks.md`
+3. 输入文件：spec.md、testcases.md、constitution.md、CLAUDE.md、**项目级 `.claude/CLAUDE.md`**
+4. 产出：`plan.md` + `tasks.md`
+5. 完成回复："plan.md 和 tasks.md 已保存"
 
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"spec.md 已保存"。
-"""
-)
-```
-
-**主进程检查**：确认 `.specify/specs/{feature_id}/spec.md` 文件已生成
-
-#### A1+ 自动拆分检查（spec）
-
-主进程检查 spec.md 行数：
-```bash
-LINE_COUNT=$(wc -l < .specify/specs/{feature_id}/spec.md)
-```
-
-如果 `LINE_COUNT > 500`，派发拆分 Agent：
-
-```python
-Agent(
-    name = "sdd-split-spec",
-    subagent_type = "general-purpose",
-    model = "fast",
-    description = "SDD-拆分Spec",
-    prompt = """
-你是文档拆分工具。
-
-读取执行指令：.claude/skills/sdd-split/SKILL.md
-执行：/sdd-split spec {feature_id} --auto
-
-完成后只回复"spec 拆分完成"或"spec 无需拆分"。
-"""
-)
-```
-
-> 拆分后，spec.md 变为轻量索引（含核心信息 50-100 行 + 快速导航表），详细内容在 `spec/` 子目录中。
-> 下游 Agent 通过渐进式披露机制按需加载模块（见本文「渐进式文档披露」一节）。
-
-#### A2. Agent: Testcases
-
-```python
-Agent(
-    name = "sdd-testcases",
-    subagent_type = "general-purpose",
-    description = "SDD-Testcases",
-    prompt = """
-你是 SDD 测试用例设计器。
-
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/testcases.md
-
-第二步：按指令执行，需要读取的项目文件：
-- .specify/specs/{feature_id}/spec.md
-
-第三步：将测试用例写入：
-.specify/specs/{feature_id}/testcases.md
-
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"testcases.md 已保存"。
-"""
-)
-```
-
-**主进程检查**：确认 `testcases.md` 文件已生成
-
-#### A3. Agent: Plan
-
-```python
-Agent(
-    name = "sdd-plan",
-    subagent_type = "general-purpose",
-    description = "SDD-Plan",
-    prompt = """
-你是 SDD 技术计划生成器。
-
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/plan.md
-
-第二步：按指令执行，需要读取的项目文件：
-- .specify/specs/{feature_id}/spec.md
-- .specify/specs/{feature_id}/testcases.md
-- .specify/memory/constitution.md
-- CLAUDE.md
-
-第三步：将技术计划写入：
-.specify/specs/{feature_id}/plan.md
-
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"plan.md 已保存"。
-"""
-)
-```
-
-**主进程检查**：确认 `plan.md` 文件已生成
-
-#### A3+ 自动拆分检查（plan）
-
-主进程检查 plan.md 行数：
-```bash
-LINE_COUNT=$(wc -l < .specify/specs/{feature_id}/plan.md)
-```
-
-如果 `LINE_COUNT > 1000`，派发拆分 Agent：
-
-```python
-Agent(
-    name = "sdd-split-plan",
-    subagent_type = "general-purpose",
-    model = "fast",
-    description = "SDD-拆分Plan",
-    prompt = """
-你是文档拆分工具。
-
-读取执行指令：.claude/skills/sdd-split/SKILL.md
-执行：/sdd-split plan {feature_id} --auto
-
-完成后只回复"plan 拆分完成"或"plan 无需拆分"。
-"""
-)
-```
-
-#### A4. Agent: Tasks
-
-```python
-Agent(
-    name = "sdd-tasks",
-    subagent_type = "general-purpose",
-    description = "SDD-Tasks",
-    prompt = """
-你是 SDD 任务分解生成器。
-
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/tasks.md
-
-第二步：按指令执行，需要读取的项目文件：
-- .specify/specs/{feature_id}/spec.md
-- .specify/specs/{feature_id}/testcases.md
-- .specify/specs/{feature_id}/plan.md
-- .specify/memory/constitution.md
-
-第三步：将任务分解写入：
-.specify/specs/{feature_id}/tasks.md
-
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"tasks.md 已保存"。
-"""
-)
-```
-
-**主进程检查**：确认 `tasks.md` 文件已生成
-
-#### A4+ 自动拆分检查（tasks）
-
-主进程检查 tasks.md 行数：
-```bash
-LINE_COUNT=$(wc -l < .specify/specs/{feature_id}/tasks.md)
-```
-
-如果 `LINE_COUNT > 800`，派发拆分 Agent：
-
-```python
-Agent(
-    name = "sdd-split-tasks",
-    subagent_type = "general-purpose",
-    model = "fast",
-    description = "SDD-拆分Tasks",
-    prompt = """
-你是文档拆分工具。
-
-读取执行指令：.claude/skills/sdd-split/SKILL.md
-执行：/sdd-split tasks {feature_id} --auto
-
-完成后只回复"tasks 拆分完成"或"tasks 无需拆分"。
-"""
-)
-```
-
-**Planner 完成标志**：四份文件均已保存到 `.specify/specs/{feature_id}/`
+**主进程检查**：确认两个文件均已生成。
 
 ---
 
-### Phase B: 执行器（1 个 Agent，含自审门禁）
+### Phase A→B 过渡: Worktree 隔离环境创建
 
-```python
-Agent(
-    name = "sdd-implement",
-    subagent_type = "general-purpose",
-    description = "SDD-Implement",
-    prompt = """
-你是 SDD 任务执行器。
+1. **解析涉及的项目**：扫描 plan.md 中 `repo/{project}/` 路径前缀
+2. **创建 worktree**：`git worktree add .worktrees/sdd-{feature_id} -b sdd/{feature_id}-{name} {base_branch}`
+3. **更新 pipeline-state.json**：记录 worktree 路径和分支
+4. **生成路径映射表**：注入后续 Agent prompt
 
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/implement.md
+> 创建失败时降级为主工作目录操作。
 
-第二步：按指令执行，需要读取的项目文件：
-- .specify/specs/{feature_id}/spec.md
-- .specify/specs/{feature_id}/testcases.md
-- .specify/specs/{feature_id}/plan.md
-- .specify/specs/{feature_id}/tasks.md
-- .specify/memory/constitution.md
+---
 
-第三步：严格按照 tasks.md 中的 Phase 0→1→2→3 顺序执行所有任务。
+### Phase B: 执行器（v6 拆分，根除 context 爆炸）
 
-重要纪律：
-- 必须按步骤执行，不跳步
-- 每完成一个 Task 立即更新 tasks.md 状态
-- 不要 git commit
+#### B0. 拆分判定（主进程执行）
 
-第四步（关键！）：实现完成后必须执行自审门禁
-- 重新读取 spec.md，逐个检查每个功能点是否已实现
-- 重新读取 plan.md 的阶段合约，逐项核对
-- 检查前后端 API 路径、参数名、响应格式是否一致
-- 检查是否存在 TODO、FIXME、空实现、硬编码
-- 如果修改了前端文件，运行项目配置的 lint 工具检查并修复 error 级别问题
-- 如果发现遗漏，立即补全，不要留给评审阶段
+读取 `plan.md`，根据其内容选择执行路径：
 
-完成后回复格式：
-"实现完成，共修改 N 个文件。自审结果：M 项合约全部通过 / 发现 X 项问题已修复"
-"""
-)
+```
+扫描 plan.md：
+  has_backend  = 含「§六 后端实现」段 OR plan「关键文件索引」表中存在 Phase=P0/P1 行 OR 涉及 repo/cplm-pdm | cplm-software-center | cplm-pcm
+  has_frontend = 含「§五 前端实现」段 OR plan「关键文件索引」表中存在 Phase=P2/P3 行 OR 涉及 repo/cap-front | cat-master
+
+if has_backend and has_frontend:
+    路径 = "split"          → B1 → 检查 api-contract → B2
+elif has_backend:
+    路径 = "backend_only"   → 仅 B1（合约文件可选）
+elif has_frontend:
+    路径 = "frontend_only"  → 仅 B2（合约文件改为可选输入）
+else:
+    路径 = "legacy"         → 兼容老 implement.md（仅用于无明确前后端分类的小修复）
 ```
 
-**关键**：执行器不拆分为多个 Agent。一个 Agent 内部严格串行执行所有 Phase，保证文件不错乱。
+主进程在 `pipeline-state.json.stages.implement.mode` 中记录该选择。
 
-**主进程检查**：
-1. 确认 `tasks.md` 中的任务状态已更新（`grep -c "✅" tasks.md`）
-2. 确认 Agent 回复中包含"自审结果"，如果没有自审，主进程提示 Agent 补充
+#### B1. Backend Implement Agent（has_backend 时启动）
+
+派发参数：
+- name: `sdd-implement-backend`
+- subagent_type: `general-purpose`
+- description: `SDD-Implement-Backend`
+
+Agent prompt 要点：
+1. 首行声明 `项目根目录: {PROJECT_ROOT}`
+2. 读取指令文件：`.specify/templates/agent-prompts/implement-backend.md`
+3. 输入文件：spec.md（仅后端 US）、testcases.md（仅后端 TC）、plan.md（仅 §三/§四/§六/§七/附录）、tasks.md（仅 P0/P1）、constitution.md
+4. 注入 `{WORKTREE_PATH_MAPPING}`
+5. 操作域硬限定：仅 `repo/cplm-*/`
+6. **强制输出**（split 模式）：`.specify/specs/{id}/api-contract-actual.md`
+7. 完成回复："B1 后端实现完成，N 个文件，M 个 API。api-contract-actual.md 已就绪。"
+
+**主进程 B1→B2 之间硬门禁**（split 模式必须）：
+- `api-contract-actual.md` 存在且非空
+- 文件含 `## API-` 段
+- B1 自审报告含 `BUILD SUCCESS`
+
+任一失败 → 阻断 B2，进入修复或人类介入。
+
+#### B2. Frontend Implement Agent（has_frontend 时启动；split 模式在 B1 完成后启动）
+
+派发参数：
+- name: `sdd-implement-frontend`
+- subagent_type: `general-purpose`
+- description: `SDD-Implement-Frontend`
+
+Agent prompt 要点：
+1. 首行声明 `项目根目录: {PROJECT_ROOT}`
+2. 读取指令文件：`.specify/templates/agent-prompts/implement-frontend.md`
+3. **强制输入**（split 模式）：`api-contract-actual.md`，缺失则 Agent 报错退出
+4. 其余输入：spec.md（仅前端 US）、testcases.md（仅 UI/交互 TC）、plan.md（仅 §五/§七/附录）、tasks.md（仅 P2/P3）、constitution.md
+5. 注入 `{WORKTREE_PATH_MAPPING}`
+6. 操作域硬限定：仅 `repo/cap-front/`、`repo/cat-master/`
+7. 完成回复："B2 前端实现完成，N 个文件。API 合约 M 项全部对齐。"
+
+#### B-legacy（兼容路径）
+
+仅当 has_backend 与 has_frontend 都为 false 时启用：
+- 派发 implement.md 单 Agent（原 v5.1 路径）
+- 用于无明确前后端分类的小型修补，向下兼容老 spec
+
+#### B 阶段埋点
+
+```json
+"implement": {
+  "status": "completed",
+  "mode": "split | backend_only | frontend_only | legacy",
+  "started_at": "...", "completed_at": "...",
+  "duration_sec": 720,
+  "b1": { "duration_sec": 380, "files_modified": 4, "compile_attempts": 1, "api_count": 2 },
+  "b2": { "duration_sec": 340, "files_modified": 5, "eslint_errors_fixed": 0 }
+}
+```
 
 ---
 
 ### Phase C: 评审循环
 
-#### C1. 确定评审范围和代码文件列表
+#### C1. 评审模式判定
 
-主进程收集已修改的代码文件列表：
-- 从 `git diff --name-only` 获取变更文件
-- 或从 `tasks.md` 的执行记录中提取
+| 轮次 | 触发条件 | 评审模式 |
+|------|---------|---------|
+| R1 | 总修改文件 ≤3 | **R1 轻量**：派发 1 个 review-single Agent，跳过仲裁 |
+| R1 | 总修改文件 >3 | **R1 全量**：3 Agent 并行 + arbitrate |
+| R2+ | 上轮 fix 修改 ≤3 文件 且 diff_lines ≤50 | **R2 轻量**：派发 1 个 review-r2-lite Agent + arbitrate（轻量模式） |
+| R2+ | 上轮 fix 修改 >3 文件 或 diff_lines >50 | **R2 全量**：3 Agent 并行 + arbitrate（含交叉引用检查） |
 
-#### C2. 创建评审目录
+**diff_lines 统计**：`git diff --stat {fix_base}...HEAD | tail -1` 解析 `N insertions, M deletions`，取 N+M。
 
-```bash
-mkdir -p .specify/specs/{feature_id}/reviews/r{n}
-```
+#### C2. R1 轻量评审（≤ 3 文件）
 
-#### C3. 并行派发 3 个评审 Agent
+派发参数：
+- name: `sdd-review-single`
+- subagent_type: `general-purpose`
+- description: `SDD-综合评审`
 
-> **3 个 Agent 必须在同一条消息中并行派发**
+Agent prompt 要点：
+1. 读取指令文件：`.specify/templates/agent-prompts/review-single.md`
+2. 输入：spec.md、testcases.md、plan.md、constitution.md、代码文件
+3. 产出**必须**为 `reviews/r{n}/review-single.md`（含评分+结论+问题清单）。**禁止**在 R1 轻量评审下产出 `arbitrate.md`
+4. ITERATE 时额外产出 `fix-directives.md`（含「允许修改的文件」白名单），PASS 时产出 `summary.md`
 
-```python
-# Agent A: 严苛审查员
-Agent(
-    name = "review-a",
-    subagent_type = "general-purpose",
-    description = "SDD评审-严苛审查员",
-    prompt = """
-你是极其严苛的代码审查专家。
+主进程读取结论行判断 PASS/ITERATE。
 
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/review-a.md
+#### C3. R1 全量评审（> 3 文件）
 
-第二步：读取需要审查的文件：
-- .specify/specs/{feature_id}/spec.md
-- .specify/specs/{feature_id}/plan.md
-- {代码文件列表，每行一个}
+**3 个 Review Agent 并行派发**：
 
-第三步：将评审报告写入：
-.specify/specs/{feature_id}/reviews/r{n}/agent-a.md
+| Agent | 角色 | 指令文件 | 产出 |
+|-------|------|----------|------|
+| review-a | 严苛审查员 | `review-a.md` | `agent-a.md` |
+| review-b | 需求守护者 | `review-b.md` | `agent-b.md` |
+| review-c | 集成检查员 | `review-c.md` | `agent-c.md` |
 
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"agent-a.md 已保存"。
-"""
-)
+3 份报告生成后，派发仲裁 Agent：
+- 指令文件：`arbitrate.md`
+- 输入：3 份报告 + plan.md（含「假设验证记录」+「Fix 白名单预设」）
+- 产出：`arbitrate.md`，ITERATE 时附加 `fix-directives.md`（含白名单），PASS 时附加 `summary.md`
 
-# Agent B: 需求守护者
-Agent(
-    name = "review-b",
-    subagent_type = "general-purpose",
-    description = "SDD评审-需求守护者",
-    prompt = """
-你是最终用户的代言人。
+#### C4. R2+ 轻量评审（小修复专用）
 
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/review-b.md
+主进程统计：上轮 fix 涉及文件数 = `len(fix-directives.md 中所有「允许修改的文件」并集)`，diff_lines = git diff --stat。
 
-第二步：读取需要审查的文件：
-- .specify/specs/{feature_id}/spec.md
-- .specify/specs/{feature_id}/testcases.md
-- {代码文件列表，每行一个}
+满足 ≤3 文件 且 ≤50 行 时：
 
-第三步：将评审报告写入：
-.specify/specs/{feature_id}/reviews/r{n}/agent-b.md
+派发参数：
+- name: `sdd-review-r2-lite`
+- subagent_type: `general-purpose`
+- description: `SDD-R2轻量评审`
 
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"agent-b.md 已保存"。
-"""
-)
+Agent prompt 要点：
+1. 读取指令文件：`.specify/templates/agent-prompts/review-r2-lite.md`
+2. 输入：spec.md（仅 fix 涉及的 US 段）、plan.md（仅相关段）、`r{N-1}/fix-directives.md`、`r{N-1}/arbitrate.md`、本轮修改文件清单
+3. 产出：`reviews/r{n}/agent-lite.md`（评分 + 问题清单 + 交叉引用检查表）
 
-# Agent C: 集成检查员
-Agent(
-    name = "review-c",
-    subagent_type = "general-purpose",
-    description = "SDD评审-集成检查员",
-    prompt = """
-你是系统集成专家。
+随后派发 arbitrate（轻量模式）：
+- prompt 中明确传入 `评审模式: 轻量（单 Agent）`
+- 输入仅 `agent-lite.md`
+- 产出 `arbitrate.md`，必要时 `fix-directives.md`
 
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/review-c.md
+#### C5. R2+ 全量评审
 
-第二步：读取需要审查的文件：
-- .specify/specs/{feature_id}/plan.md
-- .specify/specs/{feature_id}/testcases.md
-- .specify/memory/constitution.md
-- {代码文件列表，每行一个}
+3 个 Review Agent 并行派发，再 arbitrate（全量模式）。
+arbitrate 必须执行**交叉引用检查**（v6 新增）：对上轮 fix 的所有修改文件执行 grep 上游引用，未被覆盖的引用文件标记为 `CROSS-REF-MISS-N` 并强制追加 FIX-N。
 
-第三步：将评审报告写入：
-.specify/specs/{feature_id}/reviews/r{n}/agent-c.md
+#### C6. 判定规则
 
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"agent-c.md 已保存"。
-"""
-)
-```
+- 功能完整性 ≥ 4 且 需求一致性 ≥ 4 且 0 个 HIGH 确认问题 → **PASS**
+- 否则 → **ITERATE**
+- MEDIUM/LOW 问题记录到 summary.md，不阻塞交付
 
-#### C4. 检查评审报告文件
+#### C7. 修复（ITERATE 时）
 
-主进程确认 3 个报告文件都已生成：
-```
-.specify/specs/{feature_id}/reviews/r{n}/agent-a.md
-.specify/specs/{feature_id}/reviews/r{n}/agent-b.md
-.specify/specs/{feature_id}/reviews/r{n}/agent-c.md
-```
+派发 Fix Agent：
+- 指令文件：`fix.md`（v6 含文件白名单铁律 + OPT 默认跳过）
+- 输入：`fix-directives.md`（必含「允许修改的文件」字段）、plan.md
+- 注入 Worktree 映射
+- Fix Agent 修改前比对白名单，修改后 git diff 复核，越权立即回滚
 
-#### C5. 派发仲裁 Agent
+#### C8. 增量评审（R2+）
 
-```python
-Agent(
-    name = "sdd-arbitrate",
-    subagent_type = "general-purpose",
-    description = "SDD-仲裁",
-    prompt = """
-你是评审仲裁器。
-
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/arbitrate.md
-
-第二步：读取 3 份评审报告：
-- .specify/specs/{feature_id}/reviews/r{n}/agent-a.md
-- .specify/specs/{feature_id}/reviews/r{n}/agent-b.md
-- .specify/specs/{feature_id}/reviews/r{n}/agent-c.md
-
-第三步：执行仲裁，将结果写入：
-- .specify/specs/{feature_id}/reviews/r{n}/arbitrate.md
-
-如果结论为 ITERATE，额外写入修复指令：
-- .specify/specs/{feature_id}/reviews/r{n}/fix-directives.md
-
-如果结论为 PASS，额外写入评审总结：
-- .specify/specs/{feature_id}/reviews/summary.md
-
-重要：你必须使用 Write 工具保存文件，不要只输出到终端。
-完成后只回复"arbitrate.md 已保存，结论: PASS/ITERATE"。
-"""
-)
-```
-
-#### C6. 读取仲裁结论
-
-主进程只读取 `arbitrate.md` 的结论行：
-
-```bash
-grep "结论:" .specify/specs/{feature_id}/reviews/r{n}/arbitrate.md
-```
-
-**判定规则（v5 调整）**：
-- 所有维度 ≥ 4 且 0 个 HIGH 级确认问题 → **PASS**
-- 功能完整性 < 4 或 需求一致性 < 4 → **必须 ITERATE**（功能/需求硬阈值）
-- 存在 HIGH 级确认问题（≥2 Agent 共识） → **必须 ITERATE**
-- 其余情况（仅 MEDIUM/LOW 问题）→ **PASS，附带建议修复清单**
-
-> **设计理念**：v4 的全 5 分制导致 R1 几乎必然 ITERATE，浪费评审 Agent 开销。
-> v5 将阈值调整为"功能和需求 ≥ 4 + 无 HIGH 确认问题"，让高质量实现能一次通过。
-> MEDIUM/LOW 问题记录到 summary.md 作为后续优化建议，不阻塞交付。
-
-- **PASS** → 生成最终报告，流程结束
-- **ITERATE** → 进入 C7
-
-#### C7. 派发修复 Agent（ITERATE 时）
-
-```python
-Agent(
-    name = "sdd-fix",
-    subagent_type = "general-purpose",
-    description = "SDD-修复",
-    prompt = """
-你是评审修复执行器。
-
-第一步：读取你的执行指令文件：
-.specify/templates/agent-prompts/fix.md
-
-第二步：读取修复指令：
-.specify/specs/{feature_id}/reviews/r{n}/fix-directives.md
-
-参考文件（按需读取）：
-- .specify/specs/{feature_id}/plan.md
-
-第三步：按指令逐项修复代码。
-
-重要纪律：
-- 严格按照修复指令修复，不做额外改动
-- 不要修改 spec/testcases/plan/tasks 文档
-- 不要 git commit
-- 完成后只回复"修复完成，共修复 N 项"。
-"""
-)
-```
-
-修复完成后，回到 C2（创建 `r{n+1}` 目录，重新派发 3 个评审 Agent）。
-
-#### C8. 增量评审（R2+ 轮次优化）
-
-> **v5 新增**：Fix 后的重新评审只审查修复涉及的文件，而非全部代码。
-
-当 n ≥ 2 时，评审 Agent 的 prompt 增加以下约束：
-
-```
-本轮为增量评审（Round {n}），请重点审查以下修复项：
-{fix-directives.md 中的 FIX-xxx 列表}
-
-涉及的文件：
-{fix 涉及的文件列表}
-
-评审范围：
-1. 上一轮的修复指令是否全部正确落实
-2. 修复是否引入了新问题
-3. 不需要重新审查未修改的文件
-```
+R2+ 评审 Agent 只读修改文件 + 上轮 fix-directives + arbitrate。
+arbitrate 必须扩展审查范围至「交叉引用」上游文件。
 
 #### 迭代限制
 
-最多 3 轮评审。超过 3 轮仍未 PASS → 暂停，输出影响分析，等待人类决策。
+最多 3 轮。超过 3 轮 → 暂停，输出影响分析，等待人类决策。
 
 ---
 
-### 流水线状态持久化
+### Phase D: 知识提取（v6 新增，Review 最终 PASS 后触发）
 
-> **v5 新增**：记录执行状态，支持精确恢复。
+**触发条件**：Phase C 最终结论 = PASS（无论 R1/R2/R3 哪一轮）。
 
-每个阶段完成后，主进程更新状态文件：
+派发参数：
+- name: `sdd-knowledge-extract`
+- subagent_type: `general-purpose`
+- description: `SDD-知识提取`
+
+Agent prompt 要点：
+1. 首行声明 `项目根目录: {PROJECT_ROOT}`
+2. 读取指令文件：`.specify/templates/agent-prompts/knowledge-extract.md`
+3. 输入：本 spec 全部 reviews/r*/、iterations/*.md（如有）、pipeline-state.json、`.specify/memory/iteration-patterns.md`、constitution §VII
+4. 产出：更新 `.specify/memory/iteration-patterns.md`（新增 / 验证次数+1 / 淘汰最旧）
+5. 完成回复："Phase D 完成。新增 N 条，验证 +1 共 M 条，淘汰 K 条，待晋升 L 条：[PTN-XXX...]"
+
+**主进程检查**：
+- iteration-patterns.md 文件存在
+- 文件内总条目数 ≤50（硬上限）
+- 头部 frontmatter 已更新（容量 / 最后更新 / 本次新增/淘汰统计）
+
+**主进程提示**：若 Agent 回复中含「待晋升」清单 → 在最终输出中提醒人类「下次维护时审核晋升清单」。
+
+**Phase D 不阻塞 Pipeline 完成**：即便提取失败也只记录 warning，不影响 PASS 结论。
+
+---
+
+### Pipeline 收尾自动化（v6 新增）
+
+Phase D 完成后，主进程依次执行：
+
+1. **清理 .backup 文件**：
+   ```bash
+   find .specify/specs/{feature_id}/ -name "*.backup" -delete
+   ```
+
+2. **写/更新 specs/{id}/README.md**（若已存在则覆盖）：
+   ```markdown
+   # {feature_id}: {feature_name}
+
+   - 状态: COMPLETED
+   - 当前版本: v{N}
+   - R1 结果: PASS / ITERATE
+   - 最终轮次: R{n}
+   - 涉及项目: cap-front, cplm-pdm
+   - 创建: YYYY-MM-DD
+   - 完成: YYYY-MM-DD
+
+   ## 摘要
+   {从 spec.md 提取首段}
+
+   ## 文档导航
+   - [spec.md](./spec.md)
+   - [testcases.md](./testcases.md)
+   - [plan.md](./plan.md)
+   - [tasks.md](./tasks.md)
+   - [api-contract-actual.md](./api-contract-actual.md)（如有）
+   - [reviews/summary.md](./reviews/summary.md)
+   - [iterations/INDEX.md](./iterations/INDEX.md)（如有）
+   ```
+
+3. **更新 REGISTRY.md**（见下文 REGISTRY 段）
+
+4. **生成 iterations/INDEX.md**（仅当 iterations/ 目录存在且含文件）：
+   ```markdown
+   # 迭代索引
+
+   | 编号 | 类型 | 主题 | 日期 |
+   |------|------|------|------|
+   | iter-001 | bugfix | 修复导出空数据 | 2026-04-01 |
+   ```
+
+收尾失败 → 记录 warning 到 pipeline-state.json，不阻塞最终输出。
+
+---
+
+### 流水线状态持久化（v6 埋点扩展）
+
+每个阶段**开始时**写 `started_at`，**结束时**写 `completed_at + duration_sec`。
+每轮评审结束追加问题统计与 Agent 级耗时。Pipeline 结束写 `files_modified[] + metrics`。
 
 ```json
-// .specify/specs/{feature_id}/pipeline-state.json
 {
-  "feature_id": "{feature_id}",
-  "version": "v5",
-  "started_at": "2026-04-14T10:00:00Z",
-  "current_stage": "review-r2",
+  "feature_id": "{id}",
+  "feature_name": "{name}",
+  "version": "v6",
+  "started_at": "2026-04-25T10:00:00Z",
+  "completed_at": null,
+  "current_stage": "{stage}",
+  "worktrees": { "{project}": { "branch": "...", "worktree_path": "...", "base_branch": "..." } },
   "stages": {
-    "clarification": { "status": "completed", "completed_at": "..." },
-    "specify": { "status": "completed", "completed_at": "...", "file": "spec.md", "lines": 247 },
-    "testcases": { "status": "completed", "completed_at": "...", "file": "testcases.md", "lines": 180 },
-    "plan": { "status": "completed", "completed_at": "...", "file": "plan.md", "lines": 468 },
-    "tasks": { "status": "completed", "completed_at": "...", "file": "tasks.md", "lines": 238 },
-    "implement": { "status": "completed", "completed_at": "...", "files_modified": 12, "self_review": "passed" },
-    "review-r1": { "status": "completed", "result": "ITERATE", "issues": 3 },
-    "fix-r1": { "status": "completed", "fixed": 3 },
-    "review-r2": { "status": "in_progress" }
+    "clarification":     { "status": "completed", "duration_sec": 300 },
+    "specify_testcases": { "status": "completed", "duration_sec": 480 },
+    "plan_tasks":        { "status": "completed", "duration_sec": 420 },
+    "implement": {
+      "status": "completed",
+      "mode": "split",
+      "duration_sec": 720,
+      "b1": { "duration_sec": 380, "files_modified": 4, "compile_attempts": 1, "api_count": 2 },
+      "b2": { "duration_sec": 340, "files_modified": 5, "eslint_errors_fixed": 0 }
+    },
+    "review_r1": {
+      "status": "completed", "duration_sec": 540,
+      "mode": "full",
+      "result": "ITERATE",
+      "issues_high": 2, "issues_medium": 3, "issues_low": 1,
+      "agents": {
+        "review-a":  { "duration_sec": 110 },
+        "review-b":  { "duration_sec": 105 },
+        "review-c":  { "duration_sec": 120 },
+        "arbitrate": { "duration_sec": 60 }
+      }
+    },
+    "fix_r1": {
+      "status": "completed", "duration_sec": 180,
+      "fixes_applied": 5, "fixes_skipped": 2,
+      "modified_files": 3, "diff_lines": 42
+    },
+    "review_r2": {
+      "status": "completed", "duration_sec": 200,
+      "mode": "lite",
+      "result": "PASS",
+      "issues_high": 0, "issues_medium": 1, "issues_low": 2,
+      "agents": {
+        "review-r2-lite": { "duration_sec": 130 },
+        "arbitrate":      { "duration_sec": 40 }
+      }
+    },
+    "knowledge_extract": {
+      "status": "completed", "duration_sec": 90,
+      "patterns_added": 1, "patterns_validated": 2, "patterns_evicted": 0,
+      "promotion_candidates": ["PTN-012"]
+    }
+  },
+  "files_modified": ["repo/cap-front/src/...", "repo/cplm-pdm/..."],
+  "metrics": {
+    "total_duration_sec": 0,
+    "review_rounds": 2,
+    "files_count": 9,
+    "r1_pass": false
   }
 }
 ```
 
-**恢复时**：读取 `pipeline-state.json`，从 `current_stage` 的下一个阶段继续，而非依赖文件存在性猜测。
+**主进程写入时机**（硬约束，禁止省略）：
+
+1. 派发 Agent **前**：`stages.{name} = { status: "in_progress", started_at: <now> }`
+2. Agent 完成**后**：追加 `completed_at, duration_sec, status: "completed"`
+3. B1/B2 拆分时：B1 完成后写 `stages.implement.b1.{...}`；B2 完成后写 `b2.{...}`，并汇总 `stages.implement.duration_sec = b1 + b2`
+4. Review 完成后：扫描 `arbitrate.md`（或 `review-single.md` / `agent-lite.md`）问题清单与各 Agent 报告 → 写入 `issues_{high,medium,low}`、`result`、`mode`、`agents.{name}.duration_sec`
+5. Fix Agent 完成后：写 `fixes_applied`、`fixes_skipped`、`modified_files`、`diff_lines`（用于下一轮 R2 模式判定）
+6. Phase D 完成后：写 `stages.knowledge_extract.{...}`
+7. Pipeline 结束：
+   - `git diff --name-only {base_branch}...HEAD` → `files_modified`
+   - 汇总 `metrics.total_duration_sec`、`review_rounds`、`files_count`、`r1_pass`
+   - 追写顶层 `completed_at`
 
 ### 文件完整性校验
 
-> **v5 新增**：每个 Agent 完成后，主进程验证产出文件的内容结构。
+| 文件 | 必须包含 |
+|------|---------|
+| spec.md | `## 功能需求` 或 `## 用户故事` |
+| testcases.md | `UT-` 或 `FT-` 或 `E2E-` |
+| plan.md | `## 阶段合约` 或 `### Phase` |
+| tasks.md | `Phase 0` 和 `Phase 1` |
+| 评审报告 | `## 评分` 和 `## 问题清单` |
 
-| 文件 | 必须包含的结构标记 | 校验方式 |
-|------|------------------|---------|
-| spec.md | `## 功能需求` 或 `## 用户故事` | grep |
-| testcases.md | `UT-` 或 `FT-` 或 `E2E-` | grep |
-| plan.md | `## 阶段合约` 或 `### Phase` | grep |
-| tasks.md | `Phase 0` 和 `Phase 1` | grep |
-| agent-{a,b,c}.md | `## 评分` 和 `## 问题清单` | grep |
-| arbitrate.md | `## 结论:` | grep |
-
-校验失败时：主进程提示 Agent 重新生成（最多重试 1 次），重试仍失败则暂停等人类介入。
+校验失败 → 最多重试 1 次，仍失败 → 暂停等人类介入。
 
 ---
 
-### 最终输出
+### 最终步骤: REGISTRY 自动维护（v5.1 新增，MANDATORY）
 
-全自动流水线完成后，输出执行报告：
+Pipeline 每阶段结束时，主进程按下列规则更新 `.specify/specs/REGISTRY.md`：
+
+1. **Phase 0 结束**：若 `feature_id` 不在 REGISTRY 中 → 追加一行，状态 `DRAFT`
+2. **Phase A 结束**：状态置为 `IN_PROGRESS`
+3. **最终 Review PASS**：
+   - 状态置为 `COMPLETED`
+   - 填入 `R1 结果`（来自 `stages.review_r1.result`）
+   - 填入 `最终轮次`（R1/R2/R3 取决于评审轮数）
+   - 填入 `迭代数`（`ls iterations/iter-*.md | wc -l`）
+   - 填入 `完成` 日期（today）
+   - 填入 `涉及项目`（从 `files_modified[]` 的 `repo/{project}/` 前缀提取去重）
+4. **`--from` 恢复 ≥7 天未更新**：主进程提示用户是否标记 `ABANDONED`，同意后写入
+5. **存在 `v2/`/`v3/` 子目录**：追加 `,MULTI_VERSION` 到状态列
+
+**实现要点**：
+- 读 REGISTRY.md → 找到对应 ID 行 → 构造新行 → `Edit` 工具替换 → `Read` 校验
+- ID 不存在时按升序插入（在首个比当前 ID 大的行之前）
+- 不允许并发写入：同一时刻只有 pipeline 主进程写 REGISTRY
+
+### 最终输出
 
 ```
 ━━━ SDD v5 执行报告 ━━━
 
 功能: {feature_id} - {功能名称}
-执行时间: {start} ~ {end}
 迭代轮次: {n}
 
-📋 产出文件:
-  ✅ spec.md
-  ✅ testcases.md
-  ✅ plan.md
-  ✅ tasks.md
-  ✅ reviews/summary.md
+📋 产出文件: spec.md / testcases.md / plan.md / tasks.md / reviews/summary.md
+📊 最终评审: {各维度评分} → PASS
+📝 变更文件: 后端 {N} 个, 前端 {N} 个
 
-📊 最终评审（MACE v5 评审）:
-  功能完整性: {n}/5 (A-严苛审查员)  [阈值 ≥ 4]
-  需求一致性: {n}/5 (B-需求守护者)  [阈值 ≥ 4]
-  代码质量: {n}/5 (A-严苛审查员)    [阈值 ≥ 4]
-  边界处理: {n}/5 (B-需求守护者)    [阈值 ≥ 4]
-  集成完整性: {n}/5 (C-集成检查员)  [阈值 ≥ 4]
-  架构合规: {n}/5 (C-集成检查员)    [阈值 ≥ 4]
-  HIGH 确认问题: 0
-  结论: PASS
+请验收以上结果。
+```
 
-📝 变更文件:
-  后端: {N} 个文件新增, {N} 个文件修改
-  前端: {N} 个文件新增, {N} 个文件修改
+**使用 Worktree 时追加合并指引**：
 
-🔄 迭代记录:
-  Round 1: ITERATE - {问题摘要} → {修复摘要}
-  Round 2: PASS
-
-📁 评审文件:
-  reviews/r1/ — 第 1 轮评审（agent-a/b/c.md, arbitrate.md, fix-directives.md）
-  reviews/r2/ — 第 2 轮评审（agent-a/b/c.md, arbitrate.md）
-  reviews/summary.md — 评审总结
-
-请验收以上结果。如需修改，告诉我具体问题。
+```
+🔀 代码合并: cd repo/{project} && git merge sdd/{feature_id}-{name}
+   合并后清理: /sdd-worktree cleanup {feature_id}
 ```
 
 ---
 
 ## 中断与恢复
 
-### `--from` 参数
-
 ```
-/sdd-run 004 --from specify     # 从规格开始
-/sdd-run 004 --from testcases   # 已有 spec
-/sdd-run 004 --from plan        # 已有 spec + testcases
-/sdd-run 004 --from tasks       # 已有 spec + testcases + plan
-/sdd-run 004 --from implement   # 已有完整计划，只执行实现
-/sdd-run 004 --from review      # 已实现，从 r1 开始评审
-/sdd-run 004 --from fix         # 从修复继续（自动检测轮次）
+/sdd-run {id} --from specify     # 从规格开始
+/sdd-run {id} --from plan        # 已有 spec + testcases
+/sdd-run {id} --from implement   # 已有完整计划
+/sdd-run {id} --from review      # 已实现，从评审开始
+/sdd-run {id} --from fix         # 从修复继续
 ```
 
-**恢复逻辑**：
-1. 检查指定阶段的前置文件是否存在
-2. 缺少前置文件时报错并提示需要先完成的阶段
-3. 从指定阶段开始派发 Agent
-
-### 评审恢复
-
-`--from review` 时：
-1. 检查 `reviews/` 目录下已有的轮次
-2. 如果最新的 `arbitrate.md` 结论为 ITERATE，从修复继续
-3. 如果没有评审记录，从 r1 开始
-
----
-
-## 文件产出结构
-
-```
-.specify/specs/{feature_id}/
-├── requirements/
-│   ├── original.md              # 知识库原始需求（如有）
-│   └── clarification.md         # 需求澄清记录
-├── spec.md                      # 功能规格（或拆分后的索引）（含 Iteration Index）
-├── spec/                        # 拆分后的模块目录（超 500 行时生成）
-│   ├── README.md                # 完整索引
-│   ├── overview.md              # 功能概述
-│   ├── user-stories.md          # 用户故事
-│   └── ...
-├── testcases.md                 # 测试用例
-├── plan.md                      # 技术计划（或拆分后的索引）
-├── plan/                        # 拆分后的模块目录（超 1000 行时生成）
-│   ├── README.md
-│   ├── architecture.md
-│   └── ...
-├── tasks.md                     # 任务分解（或拆分后的索引）
-├── tasks/                       # 拆分后的模块目录（超 800 行时生成）
-│   ├── README.md
-│   ├── phase-0-preparation.md
-│   └── ...
-├── iterations/                  # 小型迭代记录（bug修复/小优化，跳过评审）
-│   ├── iter-001-{name}.md
-│   └── ...
-├── v2/                          # 大型增强 v2（走完整 SDD 流程）
-│   ├── spec.md                  # 增量规格（索引回 ../spec.md）
-│   ├── testcases.md
-│   ├── plan.md
-│   ├── tasks.md
-│   └── reviews/
-├── v3/                          # 后续大型增强（如有）
-│   └── ...
-└── reviews/                     # v1 评审专用文件夹
-    ├── r1/                      # 第 1 轮评审
-    │   ├── agent-a.md           # 严苛审查员报告
-    │   ├── agent-b.md           # 需求守护者报告
-    │   ├── agent-c.md           # 集成检查员报告
-    │   ├── arbitrate.md         # 仲裁报告
-    │   └── fix-directives.md    # 修复指令（ITERATE 时）
-    ├── r2/                      # 第 2 轮（如需要）
-    │   └── ...
-    └── summary.md               # 最终评审总结（PASS 后生成）
-```
-
----
-
-## 与现有 Skill 的关系
-
-> **单一真相源架构**：Skill 文件（`.claude/skills/sdd-*/SKILL.md`）是领域逻辑的唯一真相源。
-> Agent prompt（`.specify/templates/agent-prompts/*.md`）是薄壳，引用 Skill 文件获取领域规则，只补充输入/输出路径和 Agent 执行约束。
-
-| Skill | Agent 模式用途 | 手动模式用途 |
-|-------|--------------|-------------|
-| sdd-specify | Specify Agent 读取领域规则 | `/sdd-specify` 交互式执行 |
-| sdd-testcases | Testcases Agent 读取领域规则 | `/sdd-testcases` 交互式执行 |
-| sdd-plan | Plan Agent 读取领域规则 | `/sdd-plan` 交互式执行 |
-| sdd-tasks | Tasks Agent 读取领域规则 | `/sdd-tasks` 交互式执行 |
-| sdd-implement | Implement Agent 读取执行流程 | `/sdd-implement` 交互式执行 |
-| sdd-review | Review/Arbitrate/Fix Agent 读取评审规则 | `/sdd-review` 交互式执行 |
-
-Agent prompt 薄壳存储在 `.specify/templates/agent-prompts/` 目录下：
-- `specify.md` / `testcases.md` / `plan.md` / `tasks.md` — 薄壳，引用对应 Skill
-- `implement.md` — 薄壳，引用 sdd-implement Skill
-- `review-a.md` / `review-b.md` / `review-c.md` — 薄壳，引用 sdd-review Skill + 角色专属输出格式
-- `arbitrate.md` — 薄壳，引用 sdd-review Skill + 仲裁输出格式
-- `fix.md` — 薄壳，引用 sdd-implement + sdd-review Skill + 修复执行步骤
-
-**维护规则**：修改领域逻辑时只需更新 Skill 文件，Agent prompt 自动生效。
-
----
-
-## 渐进式文档披露
-
-### 拆分阈值
-
-| 文档类型 | 拆分阈值 | 检查时机 |
-|---------|---------|---------|
-| spec.md | 500 行 | A1 完成后（A1+） |
-| plan.md | 1000 行 | A3 完成后（A3+） |
-| tasks.md | 800 行 | A4 完成后（A4+） |
-
-### 拆分后的文件结构
-
-拆分后，原文件（如 `spec.md`）变为轻量索引文件（50-100 行核心信息 + 快速导航表），详细内容存储在同名子目录中：
-
-```
-spec.md          → 索引文件（核心概览 + 导航表）
-spec/            → 模块化子目录
-├── README.md    → 完整索引
-├── overview.md  → 功能概述
-├── user-stories.md → 用户故事
-└── ...
-spec.md.backup   → 原文档备份
-```
-
-### 下游 Agent 渐进式加载协议
-
-所有下游 Agent（testcases/plan/tasks/implement/review/fix）在读取 spec.md、plan.md、tasks.md 时，必须遵循以下协议：
-
-1. **先读取主文件**（如 `spec.md`）
-2. **检测是否已拆分**：如果文件内容包含 `文档已拆分为模块化结构`，说明已拆分为模块化结构
-3. **从索引获取导航**：读取快速导航表，了解模块分布
-4. **按需加载模块**：根据当前任务需要，选择性读取 `{type}/` 目录下的具体模块文件
-5. **不全量加载**：禁止一次性读取所有模块文件，按需逐个加载
-
-> 此协议已内置于各 Agent Prompt 中（`.specify/templates/agent-prompts/*.md`），Agent 自动遵循。
+恢复时读取 `pipeline-state.json`，从 `current_stage` 的下一个阶段继续。
 
 ---
 
 ## 注意事项
 
-1. **需求澄清充分**：宁可多问一轮，不可带着模糊需求进入自动流程
-2. **一次做对**：Implement Agent 必须执行自审门禁，不把问题留给评审
-3. **评审务实**：≥ 4 分 + 无 HIGH 确认问题即 PASS，MEDIUM/LOW 不阻塞交付
-4. **Agent 隔离**：每个 Agent 独立上下文，不共享对话历史
-5. **主进程轻量**：主进程只检查文件、派发 Agent、读结论行
-6. **文档必存**：所有 Agent 必须用 Write 工具保存文件，不能只输出到终端
-7. **文件必验**：每个 Agent 产出后，主进程校验文件结构完整性
-8. **状态持久化**：每个阶段完成后更新 pipeline-state.json
-9. **不自动提交**：代码修改不自动 git commit
-10. **宪法优先**：所有代码必须符合 `.specify/memory/constitution.md` 约束
-11. **CR 记录**：自动修正都记录 CR，保持可追溯性
+1. 需求澄清充分，宁可多问一轮
+2. Implement Agent 必须执行自审门禁
+3. 评审务实：≥ 4 分 + 无 HIGH 即 PASS
+4. Agent 隔离：每个 Agent 独立上下文
+5. 主进程轻量：只检查文件、派发 Agent、读结论行
+6. 所有 Agent 必须用 Write 工具保存文件
+7. 每个阶段完成后更新 pipeline-state.json
+8. 不自动 git commit
+9. 宪法优先：所有代码必须符合 constitution.md 约束

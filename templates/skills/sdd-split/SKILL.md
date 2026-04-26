@@ -29,7 +29,7 @@ invocable: true
 ```
 
 自动模式行为差异：
-- 跳过确认步骤
+- 跳过 "❓ 是否确认拆分？" 步骤
 - 直接执行拆分
 - 输出简要日志而非完整报告
 
@@ -50,6 +50,14 @@ invocable: true
 | spec.md | 500 行 | 超过此行数建议拆分 |
 | plan.md | 1000 行 | 超过此行数建议拆分 |
 | tasks.md | 800 行 | 超过此行数建议拆分 |
+
+## 使用方式
+
+```bash
+/sdd-split spec 003-module-instance-compare
+/sdd-split plan 003-module-instance-compare
+/sdd-split tasks 003-module-instance-compare
+```
 
 ## 执行步骤
 
@@ -173,7 +181,7 @@ def extract_section(content, start_title, end_title=None):
 
 - Spec: `.specify/templates/spec-modular-template/README.md`
 - Plan: `.specify/templates/plan-modular-template/README.md`
-- Tasks: 参考 `{feature_id}/tasks/README.md`
+- Tasks: 参考 `003-module-instance-compare/tasks/README.md`
 
 **替换模板变量**：
 - `{功能名称}`: 从原文档标题提取
@@ -228,10 +236,8 @@ mv tasks.md tasks.md.backup
 
 **手动模式**：向用户展示完整拆分结果。
 
-**--auto 模式**：输出简要日志。
-
 ```
-✅ 文档拆分完成: .specify/specs/{feature_id}/spec/
+✅ 文档拆分完成: .specify/specs/003-module-instance-compare/spec/
 
 📊 拆分结果：
 ┌─────────────────┬──────────┬──────────┐
@@ -389,13 +395,13 @@ def get_filename(section_title, doc_type):
 ### 拆分 Spec 文档
 
 ```bash
-/sdd-split spec {feature_id}
+/sdd-split spec 003-module-instance-compare
 ```
 
 **输出**：
 
 ```
-📄 正在分析文档: .specify/specs/{feature_id}/spec.md
+📄 正在分析文档: .specify/specs/003-module-instance-compare/spec.md
 📊 文档行数: 614 行
 ✅ 超过拆分阈值 (500 行)，建议拆分
 
@@ -430,3 +436,4 @@ def get_filename(section_title, doc_type):
 
 - [SDD 规范](../../templates/README.md)
 - [模块化模板](../../templates/spec-modular-template/)
+- [Tasks 拆分示例](../../specs/003-module-instance-compare/tasks/)

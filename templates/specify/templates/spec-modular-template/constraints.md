@@ -1,125 +1,123 @@
-# Constraints and Non-Functional Requirements
+# 约束条件和非功能需求
 
-> This document describes technical constraints, performance requirements, security requirements and other non-functional requirements
+> 本文档描述技术约束、性能要求、安全要求等非功能需求
 
-## 1. Technical Constraints
+## 1. 技术约束
 
-### 1.1 Technology Stack Constraints
+### 1.1 技术栈约束
 
-| Layer | Technology | Version | Notes |
-|-------|-----------|---------|-------|
-| Frontend Framework | {frontend_framework} | {frontend_version} | {frontend_notes} |
-| UI Library | {ui_library} | {ui_version} | {ui_notes} |
-| Backend Framework | {backend_framework} | {backend_version} | {backend_notes} |
-| Database | {database} | {database_version} | {database_notes} |
+| 层级 | 技术 | 版本 | 说明 |
+|------|------|------|------|
+| 前端框架 | React | 17.x | 不可升级到18 |
+| UI组件库 | Ant Design | 4.x | 保持版本一致 |
+| 后端框架 | Spring Boot | 2.1.7 | 不可升级 |
+| 数据库 | PostgreSQL | 12.x | 现有版本 |
 
-> Fill in from constitution.md or project configuration.
+### 1.2 兼容性约束
 
-### 1.2 Compatibility Constraints
-
-**Browser Compatibility**:
+**浏览器兼容性**：
 - Chrome 90+
 - Edge 90+
 - Firefox 88+
 - Safari 14+
 
-**Mobile Compatibility**:
-- {mobile_support_policy}
+**移动端兼容性**：
+- 不需要支持移动端
 
-### 1.3 Dependency Constraints
+### 1.3 依赖约束
 
-**Restricted Technologies**:
-- No new third-party libraries without approval
-- No framework version changes without approval
+**不可使用的技术**：
+- 不可引入新的第三方库（除非经过审批）
+- 不可修改现有框架版本
 
-## 2. Performance Requirements
+## 2. 性能要求
 
-### 2.1 Response Time
+### 2.1 响应时间
 
-| Operation | Target Response Time | Max Response Time |
-|-----------|---------------------|-------------------|
-| Page load | < 2s | < 5s |
-| List query | < 1s | < 3s |
-| Detail query | < 500ms | < 2s |
-| Data save | < 1s | < 3s |
+| 操作 | 目标响应时间 | 最大响应时间 |
+|------|-------------|-------------|
+| 页面加载 | < 2s | < 5s |
+| 列表查询 | < 1s | < 3s |
+| 详情查询 | < 500ms | < 2s |
+| 数据保存 | < 1s | < 3s |
 
-### 2.2 Concurrency Requirements
+### 2.2 并发要求
 
-- Support {concurrent_users} concurrent users
-- Peak QPS: {peak_qps}
+- 支持 100 并发用户
+- 峰值 QPS: 500
 
-### 2.3 Data Volume Requirements
+### 2.3 数据量要求
 
-- Max records per query: 1000
-- Page size: 20-100 records
+- 单次查询最大返回: 1000 条
+- 分页大小: 20-100 条
 
-## 3. Security Requirements
+## 3. 安全要求
 
-### 3.1 Authentication & Authorization
+### 3.1 认证授权
 
-- Must use unified authentication
-- Support role-based access control
-- Sensitive operations require confirmation
+- 必须通过统一认证平台
+- 支持角色权限控制
+- 敏感操作需要二次确认
 
-### 3.2 Data Security
+### 3.2 数据安全
 
-- Sensitive data must be encrypted at rest
-- Logs must not contain sensitive information
-- Support data masking
+- 敏感数据必须加密存储
+- 日志不可包含敏感信息
+- 支持数据脱敏
 
-### 3.3 Interface Security
+### 3.3 接口安全
 
-- All APIs must require authentication
-- Prevent SQL injection
-- Prevent XSS attacks
+- 所有接口必须鉴权
+- 防止 SQL 注入
+- 防止 XSS 攻击
 
-## 4. Availability Requirements
+## 4. 可用性要求
 
-### 4.1 System Availability
+### 4.1 系统可用性
 
-- Availability target: 99.9%
-- Planned downtime: no more than 2 hours per month
+- 可用性目标: 99.9%
+- 计划内停机: 每月不超过 2 小时
 
-### 4.2 Fault Tolerance
+### 4.2 容错性
 
-- Support graceful degradation
-- Critical operations support retry
-- Friendly error messages for exceptions
+- 支持降级处理
+- 关键操作支持重试
+- 异常情况有友好提示
 
-## 5. Maintainability Requirements
+## 5. 可维护性要求
 
-### 5.1 Code Standards
+### 5.1 代码规范
 
-- Follow project code conventions
-- Must pass lint/style checks
-- Critical logic must have comments
+- 遵循项目代码规范
+- 必须通过 ESLint/Checkstyle 检查
+- 关键逻辑必须有注释
 
-### 5.2 Logging Standards
+### 5.2 日志规范
 
-- Critical operations must be logged
-- Log level usage follows conventions
-- Include necessary context information
+- 关键操作必须记录日志
+- 日志级别使用规范
+- 包含必要的上下文信息
 
-### 5.3 Documentation Requirements
+### 5.3 文档要求
 
-- API documentation must be complete
-- Complex logic must have design documentation
-- Changes must update documentation
+- API 文档必须完整
+- 复杂逻辑必须有设计文档
+- 变更必须更新文档
 
-## 6. Other Constraints
+## 6. 其他约束
 
-### 6.1 Database Constraints
+### 6.1 数据库约束
 
-- No direct modification of production database
-- DDL changes must be approved
-- Must provide rollback plan
+- 不可直接修改生产数据库
+- DDL 变更必须经过审批
+- 必须提供回滚方案
 
-### 6.2 Deployment Constraints
+### 6.2 部署约束
 
-- Must support gradual rollout
-- Must provide health check endpoint
-- Must support quick rollback
+- 必须支持灰度发布
+- 必须提供健康检查接口
+- 必须支持快速回滚
 
 ---
 
-Back to [Specification Index](./README.md)
+返回 [规格索引](./README.md)

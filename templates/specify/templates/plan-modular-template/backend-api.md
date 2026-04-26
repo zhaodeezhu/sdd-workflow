@@ -1,35 +1,43 @@
-# Backend API Design
+# 后端 API 设计
 
-> This document describes backend API interface definitions
+> 本文档描述后端 REST API 接口定义
 
-## 1. API Handler Design
+## 1. Controller 设计
 
-### 1.1 Handler/Controller Class
+### 1.1 Controller 类
 
-**File Path**: `{backend_source_path}/controllers/{Name}Controller.{ext}`
+**文件路径**: `cplm-pdm/.../controller/{Name}Controller.java`
 
-```{backend_language}
-// {Name}Controller - API endpoints for {module}/{resource}
+```java
+@RestController
+@RequestMapping("/v1/{module}/{resource}")
+public class {Name}Controller {
+
+    @Autowired
+    private {Name}Service service;
+
+    // API 方法定义见下文
+}
 ```
 
-## 2. API Interface List
+## 2. API 接口列表
 
-### 2.1 Query Interface
+### 2.1 查询接口
 
 #### GET /v1/{module}/{resource}
 
-**Purpose**: Query list
+**功能**: 查询列表
 
-**Request Parameters**:
+**请求参数**:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| keyword | String | No | Keyword search |
-| status | String | No | Status filter |
-| pageNum | Integer | No | Page number (default 1) |
-| pageSize | Integer | No | Page size (default 20) |
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| keyword | String | 否 | 关键字搜索 |
+| status | String | 否 | 状态筛选 |
+| pageNum | Integer | 否 | 页码（默认1） |
+| pageSize | Integer | 否 | 每页数量（默认20） |
 
-**Response Example**:
+**响应示例**:
 
 ```json
 {
@@ -40,7 +48,7 @@
     "list": [
       {
         "id": "1",
-        "name": "Name",
+        "name": "名称",
         "status": "ACTIVE"
       }
     ]
@@ -48,19 +56,34 @@
 }
 ```
 
-### 2.2 Detail Interface
+**实现代码**:
+
+```java
+@GetMapping
+public ResponseEntity<RestResponse> list(
+    @RequestParam(required = false) String keyword,
+    @RequestParam(required = false) String status,
+    @RequestParam(defaultValue = "1") Integer pageNum,
+    @RequestParam(defaultValue = "20") Integer pageSize) {
+
+    PageInfo<{Name}DTO> result = service.list(keyword, status, pageNum, pageSize);
+    return ResponseFactory.getOkResponse(result);
+}
+```
+
+### 2.2 详情接口
 
 #### GET /v1/{module}/{resource}/{id}
 
-**Purpose**: Query detail
+**功能**: 查询详情
 
-**Path Parameters**:
+**路径参数**:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | Long | Yes | Resource ID |
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 资源ID |
 
-**Response Example**:
+**响应示例**:
 
 ```json
 {
@@ -68,93 +91,136 @@
   "message": "success",
   "data": {
     "id": "1",
-    "name": "Name",
-    "description": "Description"
+    "name": "名称",
+    "description": "描述"
   }
 }
 ```
 
-### 2.3 Create Interface
+**实现代码**:
 
-#### POST /v1/{module}/{resource}
-
-**Purpose**: Create resource
-
-**Request Body**:
-
-```json
-{
-  "name": "Name",
-  "description": "Description"
+```java
+@GetMapping("/{id}")
+public ResponseEntity<RestResponse> getById(@PathVariable Long id) {
+    {Name}DTO result = service.getById(id);
+    return ResponseFactory.getOkResponse(result);
 }
 ```
 
-**Response Example**:
+### 2.3 创建接口
+
+#### POST /v1/{module}/{resource}
+
+**功能**: 创建资源
+
+**请求体**:
+
+```json
+{
+  "name": "名称",
+  "description": "描述"
+}
+```
+
+**响应示例**:
 
 ```json
 {
   "status": "0",
-  "message": "Created successfully",
+  "message": "创建成功",
   "data": {
     "id": "1"
   }
 }
 ```
 
-### 2.4 Update Interface
+**实现代码**:
+
+```java
+@PostMapping
+public ResponseEntity<RestResponse> create(@RequestBody @Valid {Name}RequestDTO request) {
+    Long id = service.create(request);
+    return ResponseFactory.getOkResponse(id);
+}
+```
+
+### 2.4 更新接口
 
 #### PUT /v1/{module}/{resource}/{id}
 
-**Purpose**: Update resource
+**功能**: 更新资源
 
-**Path Parameters**:
+**路径参数**:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | Long | Yes | Resource ID |
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 资源ID |
 
-**Request Body**:
+**请求体**:
 
 ```json
 {
-  "name": "New Name",
-  "description": "New Description"
+  "name": "新名称",
+  "description": "新描述"
 }
 ```
 
-**Response Example**:
+**响应示例**:
 
 ```json
 {
   "status": "0",
-  "message": "Updated successfully"
+  "message": "更新成功"
 }
 ```
 
-### 2.5 Delete Interface
+**实现代码**:
+
+```java
+@PutMapping("/{id}")
+public ResponseEntity<RestResponse> update(
+    @PathVariable Long id,
+    @RequestBody @Valid {Name}RequestDTO request) {
+
+    service.update(id, request);
+    return ResponseFactory.getOkResponse();
+}
+```
+
+### 2.5 删除接口
 
 #### DELETE /v1/{module}/{resource}/{id}
 
-**Purpose**: Delete resource
+**功能**: 删除资源
 
-**Path Parameters**:
+**路径参数**:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | Long | Yes | Resource ID |
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 资源ID |
 
-**Response Example**:
+**响应示例**:
 
 ```json
 {
   "status": "0",
-  "message": "Deleted successfully"
+  "message": "删除成功"
 }
 ```
 
-## 3. Unified Response Format
+**实现代码**:
 
-### 3.1 Success Response
+```java
+@DeleteMapping("/{id}")
+public ResponseEntity<RestResponse> delete(@PathVariable Long id) {
+    service.delete(id);
+    return ResponseFactory.getOkResponse();
+}
+```
+
+## 3. 统一响应格式
+
+### 3.1 成功响应
 
 ```json
 {
@@ -164,28 +230,28 @@
 }
 ```
 
-### 3.2 Error Response
+### 3.2 错误响应
 
 ```json
 {
   "status": "1",
-  "message": "Error message",
+  "message": "错误信息",
   "data": null
 }
 ```
 
-## 4. Error Code Definitions
+## 4. 错误码定义
 
-| Error Code | Description | HTTP Status |
-|------------|-------------|-------------|
-| 0 | Success | 200 |
-| 1 | Business error | 200 |
-| 400 | Parameter error | 400 |
-| 401 | Unauthorized | 401 |
-| 403 | Forbidden | 403 |
-| 404 | Not found | 404 |
-| 500 | Server error | 500 |
+| 错误码 | 说明 | HTTP状态码 |
+|--------|------|-----------|
+| 0 | 成功 | 200 |
+| 1 | 业务错误 | 200 |
+| 400 | 参数错误 | 400 |
+| 401 | 未认证 | 401 |
+| 403 | 无权限 | 403 |
+| 404 | 资源不存在 | 404 |
+| 500 | 服务器错误 | 500 |
 
 ---
 
-Back to [Plan Index](./README.md)
+返回 [计划索引](./README.md)

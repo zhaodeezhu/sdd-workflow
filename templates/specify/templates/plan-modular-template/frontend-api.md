@@ -1,30 +1,34 @@
-# Frontend API Integration
+# 前端 API 对接
 
-> This document describes how the frontend integrates with backend APIs
+> 本文档描述前端如何对接后端 API
 
-## 1. API Service Layer
+## 1. API 服务层
 
-### 1.1 API File Structure
+### 1.1 API 文件结构
 
 ```
-{frontend_source_path}/api/
-├── index.{ext}              # API unified exports
-├── {module}.{ext}           # Module API definitions
-└── request.{ext}            # Request wrapper (existing)
+frontend/src/_utils/api/
+├── index.js              # API 统一导出
+├── {module}.js           # 模块 API 定义
+└── request.js            # 请求封装（已存在）
 ```
 
-### 1.2 API Definition
+### 1.2 API 定义
 
-**File Path**: `{frontend_source_path}/api/{module}.{ext}`
+**文件路径**: `cap-front/frontend/src/_utils/api/{module}.js`
 
-```{frontend_language}
-import { request } from '{http_client_path}';
+```javascript
+import { request } from '~/_utils/http';
+
+// API 服务器标识
+const SERVER = 'OBJECT_CLASS_SERVER';
 
 /**
- * Query list
+ * 查询列表
  */
 export const list = (params) => {
   return request({
+    _s: SERVER,
     url: '/v1/{module}/{resource}',
     method: 'GET',
     params
@@ -32,20 +36,22 @@ export const list = (params) => {
 };
 
 /**
- * Query detail
+ * 查询详情
  */
 export const getById = (id) => {
   return request({
-    url: `/v1/{module}/${id}`,
+    _s: SERVER,
+    url: `/v1/{module}/{resource}/${id}`,
     method: 'GET'
   });
 };
 
 /**
- * Create
+ * 创建
  */
 export const create = (data) => {
   return request({
+    _s: SERVER,
     url: '/v1/{module}/{resource}',
     method: 'POST',
     data
@@ -53,74 +59,196 @@ export const create = (data) => {
 };
 
 /**
- * Update
+ * 更新
  */
 export const update = (id, data) => {
   return request({
-    url: `/v1/{module}/${id}`,
+    _s: SERVER,
+    url: `/v1/{module}/{resource}/${id}`,
     method: 'PUT',
     data
   });
 };
 
 /**
- * Delete
+ * 删除
  */
 export const deleteById = (id) => {
   return request({
-    url: `/v1/{module}/${id}`,
+    _s: SERVER,
+    url: `/v1/{module}/{resource}/${id}`,
     method: 'DELETE'
   });
 };
 ```
 
-## 2. Request Response Handling
+## 2. 请求响应处理
 
-### 2.1 Success Response
+### 2.1 成功响应
 
-```{frontend_language}
-// Backend response format (adjust to match your API contract)
+```javascript
+// 后端返回格式
 {
-  status: '0',    // Check your project's actual convention (string vs number)
+  status: '0',    // 字符串类型！
   message: 'success',
   data: {}
 }
 
-// Frontend handling
+// 前端处理
 const response = await list({ keyword: 'test' });
-if (response.status === '0') {  // Adjust status check to match your project
+if (response.status === '0') {  // 注意：status 是字符串
   console.log(response.data);
 }
 ```
 
-### 2.2 Error Handling
+### 2.2 错误处理
 
-```{frontend_language}
+```javascript
 try {
   const response = await create(data);
   if (response.status === '0') {
-    // Success handling
+    message.success('创建成功');
   } else {
-    // Business error handling
+    message.error(response.message || '创建失败');
   }
 } catch (error) {
-  // Network error handling
+  message.error('网络错误');
   console.error(error);
 }
 ```
 
-## 3. Notes
+## 3. BFF 层配置
 
-### 3.1 Response Status Check
+### 3.1 API 路径注册
 
-**Important**: Check your project's API response convention for the status field type and success value.
+**文件路径**: `cap-front/backend/src/apiPath/modules/{module}.js`
 
-### 3.2 Error Handling
+```javascript
+module.exports = {
+  // 查询列表
+  GET_{MODULE}_{RESOURCE}_LIST: {
+    method: 'GET',
+    uri: '/v1/{module}/{resource}'
+  },
 
-- Network errors: catch with try-catch
-- Business errors: check response status
-- User notification: use appropriate UI feedback
+  // 查询详情
+  GET_{MODULE}_{RESOURCE}_DETAIL: {
+    method: 'GET',
+    uri: '/v1/{module}/{resource}/:id'
+  },
+
+  // 创建
+  POST_{MODULE}_{RESOURCE}_CREATE: {
+    method: 'POST',
+    uri: '/v1/{module}/{resource}'
+  },
+
+  // 更新
+  PUT_{MODULE}_{RESOURCE}_UPDATE: {
+    method: 'PUT',
+    uri: '/v1/{module}/{resource}/:id'
+  },
+
+  // 删除
+  DELETE_{MODULE}_{RESOURCE}_DELETE: {
+    method: 'DELETE',
+    uri: '/v1/{module}/{resource}/:id'
+  }
+};
+```
+
+### 3.2 导出配置
+
+**文件路径**: `cap-front/backend/src/apiPath/index.js`
+
+```javascript
+const {module}Api = require('./modules/{module}');
+
+module.exports = {
+  ...{module}Api,
+  // 其他模块...
+};
+```
+
+## 4. 请求示例
+
+### 4.1 查询列表
+
+```javascript
+import { list } from '~/_utils/api/{module}';
+
+// 调用
+const fetchList = async () => {
+  const response = await list({
+    keyword: 'test',
+    status: 'ACTIVE',
+    pageNum: 1,
+    pageSize: 20
+  });
+
+  if (response.status === '0') {
+    return response.data;
+  }
+  return null;
+};
+```
+
+### 4.2 创建资源
+
+```javascript
+import { create } from '~/_utils/api/{module}';
+
+// 调用
+const handleCreate = async (formData) => {
+  const response = await create({
+    name: formData.name,
+    description: formData.description
+  });
+
+  if (response.status === '0') {
+    message.success('创建成功');
+    return response.data.id;
+  } else {
+    message.error(response.message);
+    return null;
+  }
+};
+```
+
+## 5. 注意事项
+
+### 5.1 响应状态判断
+
+**重要**：后端返回的 `status` 是字符串类型，不是数字！
+
+```javascript
+// ❌ 错误
+if (response.status === 0) { ... }
+
+// ✅ 正确
+if (response.status === '0') { ... }
+```
+
+### 5.2 请求服务器标识
+
+使用 `_s` 参数指定后端服务器：
+
+```javascript
+const SERVER = 'OBJECT_CLASS_SERVER';  // 对象引擎服务器
+
+request({
+  _s: SERVER,  // 必须指定
+  url: '/v1/...',
+  method: 'GET'
+});
+```
+
+### 5.3 错误处理
+
+- 网络错误：try-catch 捕获
+- 业务错误：检查 response.status
+- 统一提示：使用 message.error()
 
 ---
 
-Back to [Plan Index](./README.md)
+返回 [计划索引](./README.md)

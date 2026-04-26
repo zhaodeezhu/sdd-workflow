@@ -6,221 +6,209 @@
 > 作者: {author}
 
 <!--
-Important: Spec describes What (what to do), not How (how to do it).
-Forbidden: SQL, code snippets, file paths, class/method names, modification lists.
-These belong in plan.md and tasks.md.
+⚠️ 重要提醒：Spec 只描述 What（做什么），不描述 How（怎么做）。
+禁止出现：SQL、代码片段、具体文件路径、类名/方法名、修改清单。
+这些内容属于 plan.md 和 tasks.md。
 -->
 
-## 0. Requirement Traceability
+## 〇、需求追溯
 
-> Record the original source of requirements for traceability
+> 本节记录需求的原始来源，便于追溯和验证
 
-### 0.1 Requirement Source
-| Item | Content |
-|------|---------|
-| Source Type | {source_type} <!-- KB/PRD/Verbal/Other --> |
-| Source URL | {source_url} <!-- if available --> |
-| Requirement Owner | {requirement_owner} |
-| Requirement Version | {requirement_version} |
+### 0.1 需求来源
+| 项目 | 内容 |
+|------|------|
+| 来源类型 | {source_type} <!-- KB/PRD/口头/其他 --> |
+| 来源链接 | {source_url} <!-- 如果有KB链接 --> |
+| 需求负责人 | {requirement_owner} |
+| 需求版本 | {requirement_version} |
 
-### 0.2 Original Requirement Document
-{#if has_source}
-**Original Requirement**: `requirements/original.md`
+### 0.2 原始需求文档
+{#if has_kb_source}
+**KB原始需求**: `requirements/original.md`
 
-This specification is based on the original requirement document. See original document for details.
+本规格基于KB需求文档生成，详细需求请查看原始文档。
 
 {#if has_child_pages}
-**Related Sub-pages**:
+**相关子页面**:
 {child_pages_list}
 {/if}
 {#else}
-*This feature is technology-driven or has no formal requirement document*
+*本功能为技术驱动或无正式需求文档*
 {/if}
 
-### 0.3 Requirement Change Log
-| Date | Change | Changed By |
-|------|--------|------------|
-| {date} | Initial requirement | {author} |
+### 0.3 需求变更记录
+| 日期 | 变更内容 | 变更人 |
+|------|----------|--------|
+| {date} | 初始需求 | {author} |
 
 ---
 
-## 1. Feature Overview
+## 一、功能概述
 
-### 1.1 Feature Name
+### 1.1 功能名称
 {feature_name}
 
-### 1.2 Feature Description
-<!-- Describe the core goal in 2-3 sentences -->
+### 1.2 功能描述
+<!-- 用 2-3 句话描述功能的核心目标 -->
 {feature_description}
 
-### 1.3 Business Background
+### 1.3 业务背景
 
-#### Pain Points
-<!-- Describe current problems and difficulties users face -->
+#### 业务痛点
+<!-- 描述当前存在什么问题，用户遇到了什么困难 -->
 {business_pain_points}
 
-#### Solution Overview
-<!-- Describe how to solve these problems in business language -->
+#### 解决方案
+<!-- 概述如何解决这些问题，用业务语言描述 -->
 {solution_overview}
 
-### 1.4 Related Modules
-<!-- Only module names and business functions, no file paths or class names -->
-| Module | Business Function | Description |
-|--------|-------------------|-------------|
+### 1.4 关联模块
+<!-- 只写模块名称和业务功能，不写文件路径或类名 -->
+| 模块 | 业务功能 | 说明 |
+|------|----------|------|
 | {module_name} | {business_function} | {description} |
 
 ---
 
-## 2. User Stories
+## 二、用户故事
 
-### User Story 1: {story_title}
-**As** {user_role}
-**I want** {goal}
-**So that** {benefit}
+### 用户故事 1: {story_title}
+**作为** {user_role}
+**我希望** {goal}
+**以便于** {benefit}
 
-**Acceptance Criteria:**
+**验收标准:**
 - [ ] Given {condition}, When {action}, Then {result}
 - [ ] Given {condition}, When {action}, Then {result}
 
-### User Story 2: {story_title}
+### 用户故事 2: {story_title}
 ...
 
 ---
 
-## 3. Functional Requirements
+## 三、功能需求
 
-### 3.1 Core Features
-| Feature | Description | Priority | Notes |
-|---------|-------------|----------|-------|
+### 3.1 核心功能
+| 功能点 | 描述 | 优先级 | 备注 |
+|--------|------|--------|------|
 | {feature_1} | {description} | P0 | |
 | {feature_2} | {description} | P1 | |
 
-### 3.2 UI Requirements
+### 3.2 界面需求
 
-#### 3.2.1 Page Layout
-<!-- Describe page structure in simple ASCII, focus on user-visible content -->
+#### 3.2.1 页面布局
+<!-- 用简单 ASCII 描述页面结构，聚焦用户看到的内容 -->
 {page_layout_description}
 
-#### 3.2.2 Interaction Flow
-<!-- Describe operation steps from user perspective -->
+#### 3.2.2 交互流程
+<!-- 用用户视角描述操作步骤：用户做了什么 → 系统怎么响应 -->
 {interaction_flow}
 
-#### 3.2.3 UI Components
-<!-- Describe component types needed (dropdown, table, dialog, etc.), no class names -->
+#### 3.2.3 UI组件
+<!-- 描述需要的组件类型（下拉框、表格、弹窗等），不写组件类名 -->
 {ui_components}
 
-### 3.3 Data Requirements
-<!-- Describe business entities and field meanings, no SQL/DDL -->
+### 3.3 数据需求
+<!-- 描述业务实体和字段含义，不写 SQL/DDL/数据库表结构 -->
 
-#### 3.3.1 Business Entities
-<!-- Describe business concepts and their relationships -->
+#### 3.3.1 业务实体
+<!-- 描述功能涉及的业务概念和它们之间的关系 -->
 {business_entities}
 
-#### 3.3.2 Business Fields
-<!-- Describe fields from business perspective, not database implementation -->
-| Field | Meaning | Required | Business Rule |
-|-------|---------|----------|---------------|
-| {field_name} | {meaning} | Yes/No | {business_rule} |
+#### 3.3.2 业务字段
+<!-- 从业务角度描述字段，不关心数据库实现 -->
+| 业务字段 | 含义 | 是否必填 | 业务规则 |
+|----------|------|----------|----------|
+| {field_name} | {meaning} | 是/否 | {business_rule} |
 
-### 3.4 Interface Requirements
-<!-- Describe what interfaces are needed and their purpose, no API paths or code -->
+### 3.4 接口需求
+<!-- 描述需要什么接口、用途是什么，不写具体 API path 或代码 -->
 
-| Interface Purpose | Description | Notes |
-|-------------------|-------------|-------|
+| 接口用途 | 描述 | 备注 |
+|----------|------|------|
 | {interface_purpose} | {description} | {notes} |
 
 ---
 
-## 4. Non-Functional Requirements
+## 四、非功能需求
 
-### 4.1 Performance Requirements
-- Response time: {response_time}
-- Concurrency: {concurrency}
+### 4.1 性能要求
+- 响应时间: {response_time}
+- 并发量: {concurrency}
 
-### 4.2 Security Requirements
+### 4.2 安全要求
 {security_requirements}
 
-### 4.3 Compatibility
-- Browser: Chrome 80+, Edge 80+
-- Resolution: 1920x1080 and above
+### 4.3 兼容性
+- 浏览器: Chrome 80+, Edge 80+
+- 分辨率: 1920x1080 及以上
 
 ---
 
-## 5. Boundary Conditions
+## 五、边界条件
 
-### 5.1 Preconditions
+### 5.1 前置条件
 {preconditions}
 
-### 5.2 Postconditions
+### 5.2 后置条件
 {postconditions}
 
-### 5.3 Exception Handling
-<!-- Describe exception scenarios and user-visible handling from business perspective -->
-| Exception Scenario | User-Visible Handling |
-|--------------------|-----------------------|
+### 5.3 异常处理
+<!-- 从业务角度描述异常场景和用户可见的处理方式 -->
+| 异常场景 | 用户可见的处理方式 |
+|----------|-------------------|
 | {scenario} | {handling} |
 
 ---
 
-## 6. Acceptance Criteria
+## 六、验收标准
 
-### 6.1 Functional Acceptance
-- [ ] All user story acceptance criteria pass
-- [ ] Core feature tests pass
-- [ ] Boundary condition tests pass
+### 6.1 功能验收
+- [ ] 所有用户故事的验收标准通过
+- [ ] 核心功能测试通过
+- [ ] 边界条件测试通过
 
-### 6.2 Quality Acceptance
-- [ ] Unit test coverage >= 80%
-- [ ] Code review passed
-- [ ] No critical bugs
+### 6.2 质量验收
+- [ ] 单元测试覆盖率 >= 80%
+- [ ] 代码Review通过
+- [ ] 无严重Bug
 
-### 6.3 Documentation Acceptance
-- [ ] API documentation updated
-- [ ] User manual updated (if needed)
+### 6.3 文档验收
+- [ ] API文档更新
+- [ ] 用户手册更新（如需要）
 
 ---
 
-## 7. Appendix
+## 七、附录
 
-### 7.1 Glossary
-<!-- Define business terms to help understand requirements -->
-| Term | Definition |
-|------|------------|
+### 7.1 术语表
+<!-- 定义业务术语，帮助理解需求 -->
+| 术语 | 定义 |
+|------|------|
 | {term} | {definition} |
 
-### 7.2 References
+### 7.2 参考资料
 - {reference_1}
 - {reference_2}
 
-### 7.3 Change Log
-| Date | Version | Change | Author |
-|------|---------|--------|--------|
-| {date} | v1.0 | Initial version | {author} |
+### 7.3 变更记录
+| 日期 | 版本 | 变更内容 | 作者 |
+|------|------|----------|------|
+| {date} | v1.0 | 初始版本 | {author} |
 
 ---
 
-## 8. Iteration Index
-
-> All subsequent modifications (bugfixes, patches, enhancements) to this feature are tracked here.
-> Each entry links to the detailed iteration document. This table is the **reverse index** — 
-> anyone reading this spec can see the full history of all changes made after v1.
-
-| ID | Type | Date | Description | Document |
-|----|------|------|-------------|----------|
-<!-- Rows are appended automatically by sdd-fix and sdd-run when iterations are created -->
-
----
-
-*This document is generated based on SDD specification template*
+*本文档基于SDD规范模板生成*
 
 <!--
-Self-check list (check after generation):
-- [ ] No SQL statements
-- [ ] No code snippets (in any language)
-- [ ] No file paths (e.g., src/pages/xxx/xxx.jsx)
-- [ ] No class or method names
-- [ ] No "modification list" section
-- [ ] Related modules only have module names, not file paths
-- [ ] Data requirements describe business entities, not database table structures
-- [ ] Interface requirements describe purpose, not API code
+⚠️ 自查清单（生成后对照检查）：
+- [ ] 没有出现 SQL 语句
+- [ ] 没有出现代码片段（Java/JS/任何语言）
+- [ ] 没有出现具体文件��径（如 src/pages/xxx/xxx.jsx）
+- [ ] 没有出现类名或方法名（如 findEarliestSubTaskId）
+- [ ] 没有出现"修改清单"章节
+- [ ] 关联模块只写了模块名，没有写文件路径
+- [ ] 数据需求描述的是业务实体，不是数据库表结构
+- [ ] 接口需求描述的是用途，不是 API 代码
 -->

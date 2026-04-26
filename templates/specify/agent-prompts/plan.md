@@ -18,14 +18,32 @@
 1. `.specify/specs/{feature_id}/spec.md` — 功能规格（必须）
 2. `.specify/specs/{feature_id}/testcases.md` — 测试用例（必须）
 3. `.specify/memory/constitution.md` — 项目宪法（如有）
-4. `CLAUDE.md` — 项目配置
-
-**渐进式文档加载**：读取 spec.md 时，如果文件内容包含「文档已拆分为模块化结构」，说明已拆分。先从索引获取核心信息，然后按需读取 `spec/` 目录下的具体模块。技术计划设计需要完整了解功能范围和约束，务必加载 `overview.md`、`constraints.md` 等关键模块。
+4. `.specify/memory/iteration-patterns.md` — 跨 spec 经验缓冲区（v6）。按以下规则过滤：
+   - 仅读取与本次 spec 涉及项目相关的条目（按「适用」字段过滤）
+   - 仅读取「验证次数 ≥2」的条目
+   - 最多引用 10 条最相关条目
+5. `CLAUDE.md` — 项目配置
+6. 涉及项目的 `.claude/CLAUDE.md` — 项目级编码规范（如 `repo/cap-front/.claude/CLAUDE.md`），特别关注**组件使用规则**章节
+7. **项目专属规则（动态加载）**：读取 `.specify/memory/projects.yaml`，对每个 `repo_path` 命中本次需求涉及的项目（按 spec 描述、KB 链接、用户澄清推断 repo），加载其 `project_probe` 字段指向的文档；详情按文档内引用按需 Read（`project_probe_detail`）。**禁止凭记忆加载固定文档列表**——以 yaml 为唯一真源。
 
 ## 第三步：执行并保存
 
 按 Skill 文件中的执行步骤生成技术计划，将结果写入：
 `.specify/specs/{feature_id}/plan.md`
+
+**v6 强制章节**（缺失则视为不合格）：
+- 「关键文件索引」表（Implement Agent B1/B2 跳过探索的依据，格式见 `plan-tasks.md` 第三步）
+- 末尾「附录: 假设验证记录」（v5.1 沿用，记录代码级 grep/ls 验证结果）
+- 末尾「附录: Fix 文件白名单预设」（v6 新增，arbitrate 据此填充 fix-directives 的白名单）
+
+**引用经验**（如读到 iteration-patterns.md 中的相关条目）：
+在 plan.md 对应技术段落用引用块标注，例如：
+> ⚠️ 历史教训 [PTN-012]: React 组件修改时必须检查 useState 声明完整性
+
+**大小检查**：如果 plan.md 超过 1000 行，在文档末尾添加：
+```
+> ⚠️ 文档超过 1000 行，建议拆分为模块化结构。
+```
 
 ## Agent 执行约束
 

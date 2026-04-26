@@ -1,12 +1,12 @@
 ---
 name: sdd-specify
-description: 创建功能规格文档（Specification）- 定义功能需求、用户故事和验收标准。支持从知识库链接获取原始需求文档。
+description: 创建功能规格文档（Specification）- 定义功能需求、用户故事和验收标准。支持从KB链接获取原始需求文档。
 invocable: true
 ---
 
 # SDD Specify - 功能规格生成器
 
-创建功能规格文档，定义功能需求、用户故事和验收标准。支持从知识库链接自动获取原始需求文档。
+创建功能规格文档，定义功能需求、用户故事和验收标准。支持从KB链接自动获取原始需求文档。
 
 ## 双模式执行
 
@@ -38,46 +38,46 @@ invocable: true
 
 #### ❌ spec 中不应该包含的内容（这些属于 plan.md / tasks.md）
 - ~~SQL 查询语句或 DDL~~
-- ~~代码片段（任何语言的代码）~~
+- ~~代码片段（Java/JavaScript/任何语言）~~
 - ~~具体文件路径~~（如 `src/pages/xxx/CreateModal.jsx`）
 - ~~类名、方法名~~（如 `findEarliestSubTaskId()`、`getSubSoftTask()`）
 - ~~代码调用链路~~（如 Controller → Service → Repository）
 - ~~数据库表的字段级定义~~（如 column type、index）
 - ~~修改清单汇总~~（哪些文件需要改）
 - ~~架构图中的代码级细节~~
-- ~~状态管理变量名、组件内部状态~~
+- ~~MobX Store 变量名、React 组件内部状态~~
 
-### 反面示例
+### 反面示例（001 spec.md 中的问题）
 
 | 问题 | spec 中写了什么 | 应该写什么 |
 |------|-----------------|------------|
-| SQL 出现在 spec | `SELECT ... FROM ... WHERE ...` | "通过关联关系查找相关记录" |
-| 代码调用链 | `Controller → ServiceImpl → Repository.findById()` | "系统查找指定记录" |
-| 文件路径 | `src/.../CreateModal.jsx` | "配置页面" |
-| 方法名 | `getUserProfile()` | "获取用户信息" |
-| 修改清单 | 7个文件的修改列表 | ~~（删除，移到 plan/tasks）~~ |
+| SQL 出现在 spec | `SELECT sub.SFW_TASK_ID FROM ...` | "通过父子任务关联关系查找子任务" |
+| 代码调用链 | `Controller → ServiceImpl → Repository.findEarliestSubTaskId()` | "系统根据父任务查找关联的子任务" |
+| 文件路径 | `cap-front/.../CreateModal.jsx` | "自动引用配置页面" |
+| 方法名 | `getSubSoftTask()` | "获取子任务" |
+| 修改清单 | 7个文件的修改列表 | ���删除，移到 plan/tasks）|
 
 ### 关联模块的正确写法
 
 **❌ 错误**（太具体）:
 ```
-| 前端组件 | src/pages/admin/.../CreateModal.jsx | 配置弹窗 |
-| 后端Service | application/.../AutoQuoteServiceImpl.java | 自动引用 |
+| 前端组件 | cap-front/frontend/src/pages/admin/.../CreateModal.jsx | 配置弹窗 |
+| 后端Service | cplm-software-application/.../AutoQuoteServiceImpl.java | 自动引用 |
 ```
 
 **✅ 正确**（模块级别）:
 ```
 | 前端 | 自动引用配置页面 | 配置创建/编辑 |
-| 后端 | 自动引用模块 | 自动引用执行逻辑 |
+| 后端 | 软件中心 - 自动引用模块 | 自动引用执行逻辑 |
 | 数据 | 条件配置存储 | 复用现有条件表 |
 ```
 
-## 知识库链接识别
+## KB链接识别
 
-如果项目配置了知识库 MCP（如 Confluence），自动识别知识库链接并获取文档内容：
-
-- 检测 URL 中的知识库域名
-- 使用对应 MCP 工具获取页面内容
+自动识别以下格式的KB链接：
+- `https://kb.cvte.com/display/xxx/...`
+- `https://kb.cvte.com/pages/viewpage.action?pageId=xxx`
+- `kb.cvte.com` 域名下的任何链接
 
 ## 执行步骤
 
@@ -86,25 +86,25 @@ invocable: true
 - 功能名称
 - 功能描述
 - 业务背景（如果有）
-- **知识库链接**（如果有）
+- **KB链接**（如果有）
 
-### 2. 获取知识库原始需求文档（如果有链接）
+### 2. 获取KB原始需求文档（如果有KB链接）
 
 #### 2.1 使用MCP工具获取文档
-如果检测到知识库链接，使用已配置的知识库 MCP 工具获取文档详情：
+如果检测到KB链接，使用 `kb-knowledge` MCP工具获取文档详情：
 
-可用工具（如果项目配置了 Confluence MCP）：
+可用工具:
 - `mcp__kb-knowledge__confluence_search`: 搜索文档
 - `mcp__kb-knowledge__confluence_get_page`: 获取页面内容
 - `mcp__kb-knowledge__confluence_get_page_children`: 获取子页面
 
 #### 2.2 保存原始需求文档
-将获取的文档保存到功能目录：
+将获取的KB文档保存到功能目录：
 
 ```
 .specify/specs/{feature_id}-{feature-name}/
 ├── requirements/              # 原始需求文档目录
-│   ├── original.md           # 知识库原始需求（Markdown格式）
+│   ├── original.md           # KB原始需求（Markdown格式）
 │   └── metadata.json         # 文档元数据（来源、更新时间等）
 ├── spec.md                   # 功能规格
 └── contracts/                # API契约（可选）
@@ -114,7 +114,7 @@ invocable: true
 ```json
 {
   "source": "confluence",
-  "source_url": "https://知识库URL",
+  "source_url": "https://kb.cvte.com/display/xxx/需求文档",
   "page_id": "123456789",
   "title": "XXX功能需求文档",
   "author": "作者名",
@@ -133,21 +133,19 @@ invocable: true
 - 相关模块的现有规格文档
 - API文档
 - 数据库设计文档
-- **刚获取的知识库原始需求文档**（如果有）
+- **刚获取的KB原始需求文档**（如果有）
 
 ### 4. 分析现有代码（如果涉及现有模块）
-
-根据 CLAUDE.md 和 constitution.md 中的项目结构信息，定位并分析相关代码：
-- 前端: 分析项目前端源码目录（参考 CLAUDE.md 项目结构）
-- 后端: 分析项目后端目录（参考 CLAUDE.md 项目结构）
-- 数据库: 使用项目配置的数据库连接查看相关表结构
+- 前端: `cap-front/frontend/src/pages/{module}/`
+- 后端: `cplm-software-center/` 或 `cplm-pdm/`
+- 数据库: 相关表结构
 
 ### 5. 生成规格文档
 
 基于模板 `.specify/templates/spec-template.md` 生成文档，包括：
 
 #### 核心内容：
-1. **需求追溯**（如果有知识库来源）
+1. **需求追溯**（如果有KB来源）
    - 原始需求链接
    - 需求版本信息
 
@@ -216,14 +214,14 @@ invocable: true
 
 1. 扫描 `.specify/specs/` 下已有目录
 2. 判断新需求是否属于已有需求的 bug 修复、小优化或功能增强
-3. 如果是 → **不新建目录**，在原目录下的 `iterations/` 创建迭代记录，并更新原 spec.md 的「Iteration Index」
+3. 如果是 → **不新建目录**，在原目录下的 `iterations/` 创建迭代记录
 4. 如果是全新独立功能 → 新建目录
 
 #### 6.2 新功能目录结构
 ```
 .specify/specs/{feature_id}-{feature-name}/
-├── requirements/              # 原始需求文档（如果有知识库来源）
-│   ├── original.md           # 原始需求
+├── requirements/              # 原始需求文档（如果有KB来源）
+│   ├── original.md           # KB原始需求
 │   └── metadata.json         # 文档元数据
 ├── spec.md                   # 功能规格
 ├── iterations/               # 迭代记录（bug修复/小优化）
@@ -231,30 +229,67 @@ invocable: true
 ```
 
 命名规则：
-- feature_id: **三位数字编号，从 001 自增**（001, 002, 003...）。自动扫描 `.specify/specs/` 下已有目录，取最大编号 + 1
-- feature-name: 英文小写，中划线分隔，简短概括功能
-- 完整目录格式: `{feature_id}-{feature-name}/`（如 `001-user-auth/`, `002-data-export/`）
+- feature_id: 001, 002, 003...（自动递增）
+- feature-name: 英文小写，中划线分隔
 
-### 7. 保存文档
+#### 6.3 取号原子化（多人并发防冲突）
+
+> **背景**：多人并行跑 SDD 时，本地各自取 `max+1` 会撞号。必须把"取号"和"写内容"分两步，取号阶段做一次秒级的 push 抢占。
+
+**前置约定**：
+- SDD 全部在 `master` 分支上跑（本仓库当前规范）
+- 取号操作只动 `.specify/` 路径，不涉及业务代码
+
+**取号流程**（创建新目录前必须执行，手动模式与 agent 模式一致）：
+
+```
+Step 1. git pull --rebase origin master
+Step 2. 扫描 .specify/specs/ 取最大数字编号 N，候选号 = N+1
+Step 3. mkdir .specify/specs/{N+1}-{feature-name}/
+Step 4. 在 REGISTRY.md 追加一行 DRAFT 占位：
+        | {N+1} | {feature-name} | v1 | DRAFT | - | - | - | 0 | {today} | - |
+Step 5. git add .specify/specs/{N+1}-{feature-name}/ .specify/specs/REGISTRY.md
+        git commit -m "chore(sdd): reserve {N+1}-{feature-name}"
+Step 6. git push origin master
+        ├─ 成功 → 取号完成，进入 §7 spec 编写
+        └─ 失败（non-fast-forward）→ 进入冲突恢复
+```
+
+**冲突恢复**（最多重试 3 次）：
+
+```
+1. git reset --soft HEAD~1                          # 撤掉占位 commit，保留改动
+2. git restore --staged .                           # 取消暂存
+3. mv .specify/specs/{N+1}-{name}/ /tmp/sdd-tmp/    # 临时挪走目录
+4. 撤销 REGISTRY.md 的追加行（用 git checkout 恢复）
+5. git pull --rebase origin master
+6. 重新执行 Step 2-6（新的 N+1 通常变成 N+2）
+7. 把 /tmp/sdd-tmp/ 内容挪回新目录名
+```
+
+**重试 3 次仍失败**：停止取号，向用户报告："并发冲突过于激烈，请手动协调下一个 feature_id 后再继续"，**不要** fallback 到时间戳前缀（保持顺序号风格统一）。
+
+**注意事项**：
+- 占位 commit 必须**只包含目录创建 + REGISTRY 追加**，不要混入 spec.md 内容；这样冲突时 reset 代价最小
+- 占位行的 `名称` 字段写定后，后续 spec 写完只更新状态字段，不改名称
+- 取号成功后，spec.md 的撰写、保存、commit 都在本地进行，最终随 SDD 流程的常规 commit 一起 push（不需要再为每次保存单独 push）
 保存到: `.specify/specs/{feature_id}-{feature-name}/spec.md`
 
 ### 8. 检测文档大小
 
-spec.md 超过 500 行时：
-- **sdd-run 模式**：主进程在 Specify Agent 完成后自动检测行数，超阈值则派发 sdd-split Agent 执行 `/sdd-split spec {feature_id} --auto` 强制拆分为模块化结构，支持下游 Agent 渐进式加载。
-- **手动模式**：提示用户使用 `/sdd-split spec {feature_id}` 手动拆分。
+spec.md 超过 500 行时，自动执行 `/sdd-split spec {feature_id} --auto` 拆分（在 sdd-run 中）或提示用户使用 `/sdd-split spec {feature_id}`（手动模式下）。
 
 ### 9. 交互确认
 向用户展示生成的文档大纲，询问是否需要补充或修改。
 
 ## 输出示例
 
-### 有知识库链接时：
+### 有KB链接时：
 ```
-📥 检测到知识库链接
+📥 检测到KB链接: https://kb.cvte.com/display/PDM/软件任务自动引用功能
 
-正在获取文档...
-✅ 文档已获取并保存: .specify/specs/001-auto-quote/requirements/original.md
+正在获取KB文档...
+✅ KB文档已获取并保存: .specify/specs/001-auto-quote/requirements/original.md
 
 📄 需求来源信息:
 - 标题: 软件任务自动引用功能需求文档
@@ -274,7 +309,7 @@ spec.md 超过 500 行时：
 请检查文档内容，如需补充请告诉我具体内容。
 ```
 
-### 无知识库链接时：
+### 无KB链接时：
 ```
 ✅ 功能规格已生成: .specify/specs/001-user-authentication/spec.md
 
@@ -288,16 +323,54 @@ spec.md 超过 500 行时：
 请检查文档内容，如需补充请告诉我具体内容。
 ```
 
+## 需求澄清强化规范（v5 新增）
+
+> **spec 质量 = 澄清质量**。如果需求不清楚就直接写 spec，下游所有阶段都会偏离。
+
+### 澄清的核心原则
+
+1. **选择题优先**：80% 以上的澄清问题必须是选择题（2-4 个选项），让用户选编号而非写长文
+2. **多轮追问**：第一轮问方向，第二轮问细节，用户回答引出新问题必须追问
+3. **不假设**：任何"我认为应该是这样"的地方，都必须和用户确认
+4. **排除项明确**：必须确认"本次不做什么"，防止实现范围蔓延
+5. **复述确认**：澄清结束后完整复述理解，等用户说"对"才进入 spec 编写
+
+### 选择题设计规范
+
+```
+Q1. [必答] 这个功能的数据更新频率？
+   A) 用户手动触发刷新（推荐）
+   B) 自动轮询（间隔 ___）
+   C) WebSocket 实时推送
+   → 不确定选 A
+
+Q2. [可选] 空数据时的展示方式？
+   A) 显示"暂无数据"空状态（推荐）
+   B) 隐藏整个模块
+   → 不回答按 A 处理
+```
+
+### 必须澄清的问题清单
+
+以下问题在**每个 spec** 中都必须有明确答案（来自用户输入、KB 文档、或澄清确认）：
+
+- [ ] 功能范围：做哪些、不做哪些
+- [ ] 用户角色：谁来使用这个功能
+- [ ] 核心业务规则：关键判断逻辑
+- [ ] 数据来源：新建还是复用现有
+- [ ] 交互方式：页面级还是弹窗级
+- [ ] 边界条件：数据量上限、空数据处理、异常处理
+
 ## 注意事项
 
 1. **需求聚焦**: Spec 只描述 What（做什么），不描述 How（怎么做）。所有技术实现细节留给 plan.md
-2. **业务术语**: 使用项目业务领域的标准术语，不使用代码术语
+2. **业务术语**: 使用PDM领域的标准术语（物料、BOM、变更等），不使用代码术语
 3. **优先级**: 合理设置功能优先级（P0/P1/P2）
 4. **验收标准**: 确保可测试、可验证，用 Given-When-Then 描述行为
 5. **关联模块**: 只标注模块名称和业务功能，不标注文件路径或类名
 6. **数据需求**: 描述业务实体和字段含义，不写 SQL/DDL
 7. **接口需求**: 描述接口用途和输入输出，不写代码实现
-8. **知识库文档格式**: 知识库文档可能使用富文本格式，需要转换为 Markdown
+8. **KB文档格式**: KB文档可能使用Confluence格式，需要转换为Markdown
 9. **渐进式披露**: 原始需求保存后，可按需加载详细内容
 10. **禁止修改清单**: 不在 spec 中列出需要修改的文件清单，这属于 plan/tasks
 11. **接收反馈**: 当下游阶段（testcases/plan/implement）触发反馈回 spec 时，必须修正源头并在变更记录中登记 CR

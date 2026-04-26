@@ -1,60 +1,60 @@
-# Feature Overview
+# 功能概述
 
-> This document describes the business background, feature description and related modules
+> 本文档描述功能的业务背景、功能描述和关联模块
 
-## 1. Business Background
+## 1. 业务背景
 
-### 1.1 Current Pain Points
+### 1.1 当前痛点
 
-{Describe current problems and pain points}
+{描述当前存在的问题和痛点}
 
-### 1.2 Solution
+### 1.2 解决方案
 
-{Describe how this feature solves these pain points}
+{描述本功能如何解决这些痛点}
 
-### 1.3 Business Value
+### 1.3 业务价值
 
-{Describe the business value this feature brings}
+{描述本功能带来的业务价值}
 
-## 2. Feature Description
+## 2. 功能描述
 
-### 2.1 Core Features
+### 2.1 核心功能
 
-{Describe core features, 2-3 paragraphs}
+{描述核心功能，2-3段}
 
-### 2.2 Feature Scope
+### 2.2 功能范围
 
-**In Scope**:
-- Feature 1
-- Feature 2
-- Feature 3
+**包含的功能**：
+- 功能点1
+- 功能点2
+- 功能点3
 
-**Out of Scope**:
-- Feature 1
-- Feature 2
+**不包含的功能**：
+- 功能点1
+- 功能点2
 
-### 2.3 User Roles
+### 2.3 用户角色
 
-| Role | Description | Permissions |
-|------|-------------|-------------|
-| Role 1 | Role description | Permission description |
-| Role 2 | Role description | Permission description |
+| 角色 | 说明 | 权限 |
+|------|------|------|
+| 角色1 | 角色描述 | 权限描述 |
+| 角色2 | 角色描述 | 权限描述 |
 
-## 3. Related Modules
+## 3. 关联模块
 
-| Module | Function | Description |
-|--------|----------|-------------|
-| Module 1 | Function description | Relationship description |
-| Module 2 | Function description | Relationship description |
+| 模块 | 功能 | 说明 |
+|------|------|------|
+| 模块1 | 功能描述 | 关联说明 |
+| 模块2 | 功能描述 | 关联说明 |
 
-## 4. Business Flow
+## 4. 业务流程
 
 ```
-[User] -> [Action 1] -> [System Processing] -> [Result Display]
+[用户] → [操作1] → [系统处理] → [结果展示]
 ```
 
-{Describe business flow in detail}
+{详细描述业务流程}
 
 ---
 
-Back to [Specification Index](./README.md)
+返回 [规格索引](./README.md)

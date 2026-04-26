@@ -1,127 +1,126 @@
-# Architecture Design
+# 架构设计
 
-> This document describes overall architecture, technology stack and module breakdown
+> 本文档描述整体架构、技术栈和模块划分
 
-## 1. Overall Architecture
+## 1. 整体架构
 
-### 1.1 Architecture Diagram
+### 1.1 架构图
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                              Frontend                                    │
+│                              前端 (cap-front)                            │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  Page Layer                                                              │
-│  ├── Page Components ({component_framework})                            │
-│  ├── Route Configuration ({router})                                     │
-│  └── Styles ({style_solution})                                          │
+│  页面层                                                                  │
+│  ├── 页面组件 (React Components)                                        │
+│  ├── 路由配置 (React Router)                                            │
+│  └── 样式文件 (Less/CSS)                                                │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  State Management Layer                                                  │
-│  ├── Store ({state_management})                                         │
+│  状态管理层                                                              │
+│  ├── Store (MobX)                                                       │
 │  └── Actions                                                            │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  API Service Layer                                                       │
-│  ├── API Wrapper                                                        │
-│  └── Request Interceptors                                               │
+│  API服务层                                                               │
+│  ├── API封装                                                            │
+│  └── 请求拦截器                                                          │
 └──────────────────────────────────────┬──────────────────────────────────┘
                                        │ HTTP API
 ┌──────────────────────────────────────▼──────────────────────────────────┐
-│                              Backend                                     │
+│                              后端 (cplm-pdm)                            │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  Controller/Handler Layer                                               │
+│  Controller层                                                           │
 │  ├── REST API                                                           │
-│  └── Parameter Validation                                               │
+│  └── 参数验证                                                            │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  Service Layer                                                          │
-│  ├── Business Logic                                                    │
-│  └── Transaction Management                                             │
+│  Service层                                                              │
+│  ├── 业务逻辑                                                            │
+│  └── 事务管理                                                            │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  Repository/Data Access Layer                                           │
-│  ├── Data Access                                                        │
-│  └── Query Mapping                                                      │
+│  Repository层                                                           │
+│  ├── 数据访问                                                            │
+│  └── SQL映射                                                            │
 └──────────────────────────────────────┬──────────────────────────────────┘
-                                       │ {database_driver}
+                                       │ JDBC
 ┌──────────────────────────────────────▼──────────────────────────────────┐
-│                          Database ({database})                          │
+│                          数据库 (PostgreSQL)                            │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 Technology Stack
+### 1.2 技术栈
 
-> Read technology stack information from constitution.md or project configuration.
+| 层级 | 技术 | 版本 | 说明 |
+|------|------|------|------|
+| 前端框架 | React | 17.x | 复用现有技术栈 |
+| UI组件库 | Ant Design | 4.x | 复用现有组件库 |
+| 状态管理 | MobX | 5.x | 复用现有状态管理 |
+| 表格组件 | @cvte/xioo-ag-table | - | 复用现有表格组件 |
+| 后端框架 | Spring Boot | 2.1.7 | cplm-pdm 项目 |
+| ORM框架 | MyBatis | - | 复用现有ORM |
+| 数据库 | PostgreSQL | 12.x | cplm schema |
 
-| Layer | Technology | Version | Notes |
-|-------|-----------|---------|-------|
-| Frontend Framework | {frontend_framework} | {frontend_version} | {frontend_notes} |
-| UI Library | {ui_library} | {ui_version} | {ui_notes} |
-| State Management | {state_management} | {state_version} | {state_notes} |
-| Backend Framework | {backend_framework} | {backend_version} | {backend_notes} |
-| ORM Framework | {orm_framework} | {orm_version} | {orm_notes} |
-| Database | {database} | {database_version} | {database_notes} |
+### 1.3 模块划分
 
-### 1.3 Module Breakdown
+**前端模块**：
+- 页面模块：负责UI展示和用户交互
+- Store模块：负责状态管理和数据流
+- API模块：负责与后端通信
 
-**Frontend Modules**:
-- Page module: Responsible for UI display and user interaction
-- Store module: Responsible for state management and data flow
-- API module: Responsible for backend communication
+**后端模块**：
+- Controller模块：负责接口定义和参数验证
+- Service模块：负责业务逻辑实现
+- Repository模块：负责数据访问
 
-**Backend Modules**:
-- Controller module: Responsible for interface definition and parameter validation
-- Service module: Responsible for business logic implementation
-- Repository module: Responsible for data access
+## 2. 关键设计决策
 
-## 2. Key Design Decisions
+### 决策1: {决策标题}
 
-### Decision 1: {decision_title}
+**背景**：{为什么需要做这个决策}
 
-**Background**: {why this decision is needed}
+**方案对比**：
 
-**Options Comparison**:
+| 方案 | 优点 | 缺点 | 结论 |
+|------|------|------|------|
+| 方案A | 优点1、优点2 | 缺点1、缺点2 | ❌ 不采用 |
+| 方案B | 优点1、优点2 | 缺点1、缺点2 | ✅ 采用 |
 
-| Option | Pros | Cons | Conclusion |
-|--------|------|------|------------|
-| Option A | Pro 1, Pro 2 | Con 1, Con 2 | Not adopted |
-| Option B | Pro 1, Pro 2 | Con 1, Con 2 | Adopted |
+**最终决策**：采用方案B
 
-**Final Decision**: Adopt Option B
+**理由**：{详细说明为什么选择这个方案}
 
-**Rationale**: {detailed explanation of why this option was chosen}
+### 决策2: {决策标题}
 
-### Decision 2: {decision_title}
+{同上格式}
 
-{Same format as above}
-
-## 3. Module Dependencies
-
-```
-Frontend Pages -> Frontend Store -> Frontend API -> Backend Controller -> Backend Service -> Backend Repository -> Database
-```
-
-## 4. Interface Design Principles
-
-1. **RESTful Style**: Follow REST conventions
-2. **Unified Response Format**: Use standard response structure
-3. **Version Control**: API paths include version number (/v1/)
-4. **Error Handling**: Unified error codes and error messages
-
-## 5. Data Flow Design
-
-### 5.1 Query Flow
+## 3. 模块依赖关系
 
 ```
-User Action -> Page Component -> Store.action -> API Request -> Controller -> Service -> Repository -> Database
-                                                                              |
-User Interface <- Page Component <- Store.state <- API Response <- Controller <- Service <- Repository <- Query Result
+前端页面 → 前端Store → 前端API → 后端Controller → 后端Service → 后端Repository → 数据库
 ```
 
-### 5.2 Save Flow
+## 4. 接口设计原则
+
+1. **RESTful风格**：遵循REST规范
+2. **统一响应格式**：使用标准响应结构
+3. **版本控制**：API路径包含版本号（/v1/）
+4. **错误处理**：统一错误码和错误信息
+
+## 5. 数据流设计
+
+### 5.1 查询流程
 
 ```
-User Action -> Page Component -> Store.action -> API Request -> Controller -> Service -> Repository -> Database
-                                                    |           |
-                                                Validation   Business Check
+用户操作 → 页面组件 → Store.action → API请求 → Controller → Service → Repository → 数据库
+                                                                              ↓
+用户界面 ← 页面组件 ← Store.state ← API响应 ← Controller ← Service ← Repository ← 查询结果
+```
+
+### 5.2 保存流程
+
+```
+用户操作 → 页面组件 → Store.action → API请求 → Controller → Service → Repository → 数据库
+                                                    ↓           ↓
+                                                  参数验证    业务校验
 ```
 
 ---
 
-Back to [Plan Index](./README.md)
+返回 [计划索引](./README.md)

@@ -12,10 +12,21 @@ invocable: true
 
 本 Skill 支持两种执行模式：
 
-- **手动模式**（`/sdd-implement`）：交互式执行，逐任务确认，可选择执行哪个 Phase
-- **Agent 模式**（由 `sdd-run` 自动调用）：自动执行全部任务，严格串行，不等待确认
+- **手动模式**（`/sdd-implement`）：交互式执行，逐任务确认，可选择执行哪个 Phase。走单 Agent 路径（兼容老 spec）。
+- **Agent 模式**（由 `sdd-run` 自动调用）：v6 起按 plan.md 内容自动选择执行路径：
+  - **B1 → B2 拆分模式**（跨前后端）：Backend Agent 完成后输出 `api-contract-actual.md`，Frontend Agent 强制读取该合约
+  - **B-only 单边模式**（仅前端 / 仅后端）：派发对应单 Agent
+  - **Legacy 单 Agent 模式**：plan.md 既无前后端段也无文件索引时降级为 implement.md
+  - 详见 `.claude/skills/sdd-run/SKILL.md` 的 Phase B 段
 
-两种模式共享以下所有领域规则，Agent 模式额外遵循 agent prompt 中的执行约束。
+两种模式共享以下所有领域规则。Agent 模式额外遵循对应 agent prompt（`implement-backend.md` / `implement-frontend.md` / `implement.md`）中的执行约束。
+
+## v6 关键约束
+
+- **自审门禁不可降级**：ESLint / mvn compile / tsc 失败时禁止标记 `self_review=passed`，必须自修复 ≤3 轮
+- **B1/B2 操作域硬限定**：B1 只能改 `repo/cplm-*/`；B2 只能改 `repo/cap-front/`、`repo/cat-master/`
+- **API 合约真源**：B1 输出 `api-contract-actual.md` 后即冻结；B2 调用 API 时必须以该文件为唯一参考
+
 
 ## 核心定位
 
@@ -114,9 +125,9 @@ invocable: true
 📋 Phase {N} 合约自检
 
 交付物清单:
-  ✅ 数据模型层：对应实体和服务
-  ✅ 数据访问层：仓储 + 映射
-  ❌ API层：控制器（未实现分页参数）
+  ✅ Domain 层：XXXEntity, XXXService
+  ✅ Repository 层：XXXRepository + Mapper
+  ❌ Controller 层：XXXController（未实现分页参数）
 
 验证标准:
   ✅ #1 创建 API 返回正确数据格式
@@ -126,7 +137,7 @@ invocable: true
 质量阈值:
   ✅ 所有 API 端点可访问
   ✅ 无 N+1 查询
-  ✅ 架构分层正确
+  ✅ DDD 分层正确
 
 自检结论: FAIL - 2 项未通过，需修复后重新自检
 ```
@@ -173,19 +184,33 @@ invocable: true
 
 **代码质量检查**（对照 constitution.md）：
 - [ ] 是否存在 N+1 查询（for 循环内有数据库调用）
-- [ ] 架构分层是否正确（参考 constitution.md）
+- [ ] DDD 分层是否正确（Domain 不依赖 Infrastructure）
 - [ ] 是否有重复代码可以抽取（≥3 处相似逻辑）
 - [ ] 命名是否清晰、一致
 
 **集成完整性检查**：
-- [ ] 前端请求 URL 与后端 API 端点是否匹配
+- [ ] 前端请求 URL 与后端 Controller 端点是否匹配
 - [ ] 数据流是否闭环（用户操作 → API → 数据库 → 返回 → UI 更新）
 - [ ] 空数据、错误状态是否有处理
 
-**前端代码规范检查**（Lint 自动门禁）：
-- [ ] 如果本次修改涉及前端文件，运行项目配置的 lint 工具检查
-- [ ] lint 报告的 error 级别问题**必须修复**后才能通过自审
-- [ ] lint 报告的 warning 级别问题记录到自审报告，不阻塞
+**前端代码规范检查**（ESLint 自动门禁）：
+- [ ] 如果本次修改涉及 `repo/cap-front` 的文件，运行 ESLint 检查：
+  ```bash
+  cd repo/cap-front && npm run lint:fix
+  ```
+- [ ] ESLint 报告的 error 级别问题**必须修复**后才能通过自审
+- [ ] ESLint 报告的 warning 级别问题记录到自审报告，不阻塞
+
+**后端编译检查**（v5.1 新增，MANDATORY；完整 Bash 示例见 `agent-prompts/implement.md §4.5.1`）：
+- [ ] 如果修改了 `repo/cplm-pdm/` 下的 `.java` / `*Mapper.xml` / `pom.xml`：执行 `cd repo/cplm-pdm && mvn compile -pl {affected-modules} -am -q`
+- [ ] 如果修改了 `repo/cplm-software-center/` 下的后端文件：执行 `cd repo/cplm-software-center && mvn compile -q`
+- [ ] 如果修改了 `repo/cplm-pcm/` 下的后端文件：执行 `cd repo/cplm-pcm && mvn compile -pl {affected-modules} -am -q`
+- [ ] BUILD FAILURE → 分析错误 → 修复 → 重编译，最多 3 轮；3 轮仍失败 → 记录失败详情，暂停等主进程介入（不允许降级为"跳过"）
+- [ ] 编译通过后自审报告记录：`mvn compile: BUILD SUCCESS，尝试 N 次`
+
+**TypeScript 类型检查**（v5.1 新增，若项目含 `tsconfig.json` 则 MANDATORY；完整示例见 `agent-prompts/implement.md §4.5.2`）：
+- [ ] 修改了 `.ts` / `.tsx` 文件时，执行 `npx tsc --noEmit --project tsconfig.json`
+- [ ] 类型错误必须修复；自审报告记录 `tsc --noEmit: N errors`
 
 #### 7.2 自审执行流程
 
@@ -195,7 +220,7 @@ invocable: true
 3. 重新读取 plan.md 的 API 设计章节
 4. 逐个 API 检查前后端参数一致性
 5. 检查 constitution.md 的铁律是否违反
-6. 对前端修改文件运行 lint 检查，修复所有 error 级别问题
+6. 对前端修改文件运行 ESLint 检查，修复所有 error 级别问题
 7. 如果发现问题 → 立即修复 → 重新检查
 8. 全部通过 → 宣告实现完成
 ```
@@ -220,7 +245,7 @@ invocable: true
 
 ### 代码质量: ✅ 全部通过
 - N+1 查询: ✅ 无
-- 架构分层: ✅ 正确
+- DDD 分层: ✅ 正确
 - 重复代码: ✅ 无
 
 ### 集成完整性: ✅ 全部通过
@@ -241,9 +266,8 @@ invocable: true
 
 ## 注意事项
 
-- 不跳过单元测试，不忽略 lint/checkstyle 警告
+- 不跳过单元测试，不忽略 ESLint/Checkstyle 警告
 - 注意 N+1 查询问题，注意 SQL 注入和 XSS 防护
 - API 变更时同步更新文档
 - **自审门禁不可跳过**：这是减少评审轮次的关键
 - **L2+ 级别的反馈经验，必须提炼为经验教训追加到宪法**
-- 文件路径使用项目实际目录结构（参考 CLAUDE.md）

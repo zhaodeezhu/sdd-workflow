@@ -1,98 +1,96 @@
-# {feature_name} - Implementation Plan Index
+# {功能名称} - 技术实现计划索引
 
-> Version: {version}
-> Created: {create_date}
-> Updated: {update_date}
-> Related Spec: [spec.md](../spec.md)
-> Related Test Cases: [testcases.md](../testcases.md)
+> 版本: {version}
+> 创建时间: {create_date}
+> 更新时间: {update_date}
+> 关联规格: [spec.md](../spec.md)
+> 关联测试: [testcases.md](../testcases.md)
 
-## Document Structure
+## 📋 文档结构
 
-The implementation plan has been split into the following modules for easier management and on-demand loading:
+为了便于管理和按需加载，技术计划已拆分为以下模块：
 
 ```
 plan/
-├── README.md              # This file - plan index and overview
-├── architecture.md        # Architecture design
-├── data-model.md          # Data model (DDL, DTO)
-├── backend-api.md         # Backend API design
-├── backend-impl.md        # Backend implementation details
-├── frontend-api.md        # Frontend API integration
-├── frontend-impl.md       # Frontend implementation details
-├── security.md            # Security design
-├── performance.md         # Performance optimization
-└── changelog.md           # Change log
+├── README.md              # 本文件 - 计划索引和概览
+├── architecture.md        # 架构设计
+├── data-model.md          # 数据模型（DDL、DTO）
+├── backend-api.md         # 后端 API 设计
+├── backend-impl.md        # 后端实现细节
+├── frontend-api.md        # 前端 API 对接
+├── frontend-impl.md       # 前端实现细节
+├── security.md            # 安全性设计
+├── performance.md         # 性能优化
+└── changelog.md           # 变更记录
 ```
 
-## Document Overview
+## 📊 文档概览
 
-| Module | Content | Document |
-|--------|---------|----------|
-| Architecture Design | Overall architecture, tech stack, module breakdown | [architecture.md](./architecture.md) |
-| Data Model | DDL, DTO, entity relationships | [data-model.md](./data-model.md) |
-| Backend API | Controller, interface definitions | [backend-api.md](./backend-api.md) |
-| Backend Implementation | Service, Repository implementation | [backend-impl.md](./backend-impl.md) |
-| Frontend API | API integration, request wrapper | [frontend-api.md](./frontend-api.md) |
-| Frontend Implementation | Components, Store, routing | [frontend-impl.md](./frontend-impl.md) |
-| Security | Authentication, authorization, data security | [security.md](./security.md) |
-| Performance Optimization | Caching, indexing, optimization strategies | [performance.md](./performance.md) |
-| Change Log | Version change history | [changelog.md](./changelog.md) |
+| 模块 | 内容 | 文档 |
+|------|------|------|
+| 架构设计 | 整体架构、技术栈、模块划分 | [architecture.md](./architecture.md) |
+| 数据模型 | DDL、DTO、实体关系 | [data-model.md](./data-model.md) |
+| 后端API | Controller、接口定义 | [backend-api.md](./backend-api.md) |
+| 后端实现 | Service、Repository实现 | [backend-impl.md](./backend-impl.md) |
+| 前端API | API对接、请求封装 | [frontend-api.md](./frontend-api.md) |
+| 前端实现 | 组件、Store、路由 | [frontend-impl.md](./frontend-impl.md) |
+| 安全性 | 认证、授权、数据安全 | [security.md](./security.md) |
+| 性能优化 | 缓存、索引、优化策略 | [performance.md](./performance.md) |
+| 变更记录 | 版本变更历史 | [changelog.md](./changelog.md) |
 
-## Quick Navigation
+## 🔗 快速导航
 
-### Core Documents
-- [Architecture Design](./architecture.md) - Understand overall architecture and technology choices
-- [Data Model](./data-model.md) - View database design and DTO definitions
-- [Backend API](./backend-api.md) - View API interface definitions
+### 核心文档
+- [架构设计](./architecture.md) - 了解整体架构和技术选型
+- [数据模型](./data-model.md) - 查看数据库设计和DTO定义
+- [后端API](./backend-api.md) - 查看API接口定义
 
-### Implementation Documents
-- [Backend Implementation](./backend-impl.md) - Backend Service and Repository implementation
-- [Frontend API](./frontend-api.md) - Frontend API integration approach
-- [Frontend Implementation](./frontend-impl.md) - Frontend component and Store implementation
+### 实现文档
+- [后端实现](./backend-impl.md) - 后端Service和Repository实现
+- [前端API](./frontend-api.md) - 前端API对接方式
+- [前端实现](./frontend-impl.md) - 前端组件和Store实现
 
-### Auxiliary Documents
-- [Security Design](./security.md) - Security-related design
-- [Performance Optimization](./performance.md) - Performance optimization strategies
-- [Change Log](./changelog.md) - Version change history
+### 辅助文档
+- [安全性设计](./security.md) - 安全相关设计
+- [性能优化](./performance.md) - 性能优化方案
+- [变更记录](./changelog.md) - 版本变更历史
 
-## Core Information Summary
+## 🎯 核心信息摘要
 
-### Technology Stack
+### 技术栈
 
-> Read from constitution.md or project configuration.
+| 层级 | 技术 | 版本 |
+|------|------|------|
+| 前端框架 | React | 17.x |
+| UI组件库 | Ant Design | 4.x |
+| 状态管理 | MobX | 5.x |
+| 后端框架 | Spring Boot | 2.1.7 |
+| 数据库 | PostgreSQL | 12.x |
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Frontend Framework | {frontend_framework} | {frontend_version} |
-| UI Library | {ui_library} | {ui_version} |
-| State Management | {state_management} | {state_version} |
-| Backend Framework | {backend_framework} | {backend_version} |
-| Database | {database} | {database_version} |
-
-### Architecture Overview
+### 架构概览
 
 ```
-Frontend ({frontend_framework} + {state_management})
-    | HTTP API
-Backend ({backend_framework})
-    | {database_driver}
-Database ({database})
+前端 (React + MobX)
+    ↓ HTTP API
+后端 (Spring Boot)
+    ↓ JDBC
+数据库 (PostgreSQL)
 ```
 
-### Key Design Decisions
+### 关键设计决策
 
-1. **Decision 1**: {brief_description}
-2. **Decision 2**: {brief_description}
-3. **Decision 3**: {brief_description}
+1. **决策1**: {简要描述}
+2. **决策2**: {简要描述}
+3. **决策3**: {简要描述}
 
-## Usage Guide
+## 💡 使用说明
 
-1. **View Overview**: Read this file to understand the overall structure
-2. **Architecture First**: Start with [architecture.md](./architecture.md) for overall design
-3. **On-demand Loading**: Open the corresponding module document for your development phase
-4. **Backend Development**: Refer to [backend-api.md](./backend-api.md) and [backend-impl.md](./backend-impl.md)
-5. **Frontend Development**: Refer to [frontend-api.md](./frontend-api.md) and [frontend-impl.md](./frontend-impl.md)
+1. **查看概览**: 阅读本文件了解整体结构
+2. **架构优先**: 从 [architecture.md](./architecture.md) 开始了解整体设计
+3. **按需加载**: 根据开发阶段，打开对应的模块文档
+4. **后端开发**: 参考 [backend-api.md](./backend-api.md) 和 [backend-impl.md](./backend-impl.md)
+5. **前端开发**: 参考 [frontend-api.md](./frontend-api.md) 和 [frontend-impl.md](./frontend-impl.md)
 
 ---
 
-*This document follows SDD specification and includes technical implementation details (SQL, code, file paths)*
+*本文档遵循 SDD 规范，包含技术实现细节（SQL、代码、文件路径）*

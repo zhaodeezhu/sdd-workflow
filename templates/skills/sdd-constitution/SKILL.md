@@ -20,39 +20,15 @@ invocable: true
 - `README.md` - 项目概述
 - `docs/` 目录下的相关文档
 
-#### 2.2 自动检测项目结构
-
-扫描项目根目录，自动识别技术栈和模块结构：
-
-| 检测文件 | 识别信息 |
-|----------|----------|
-| `package.json` | 前端/Node.js 技术栈、框架、依赖版本 |
-| `pom.xml` / `build.gradle` | Java/JVM 后端技术栈、框架、依赖版本 |
-| `go.mod` | Go 后端技术栈 |
-| `Cargo.toml` | Rust 技术栈 |
-| `requirements.txt` / `pyproject.toml` | Python 技术栈 |
-| `*.sln` / `*.csproj` | .NET 技术栈 |
-
-根据检测结果，分析各模块的目录结构：
-- 前端源码目录（从 `package.json` 的入口和构建配置推断）
-- 后端源码目录（从构建配置和模块结构推断）
-- 数据库相关配置（从配置文件推断）
+#### 2.2 分析项目结构
+- 前端: 分析 `cap-front/frontend/src/` 目录结构
+- 后端PDM: 分析 `cplm-pdm/` 目录结构
+- 后端软件中心: 分析 `cplm-software-center/` 目录结构
 
 #### 2.3 提取技术栈信息
-
-从检测文件中提取：
-- 前端框架和版本（如 React/Vue/Angular/Svelte）
-- 后端框架和版本（如 Spring Boot/Express/Django/FastAPI）
-- 状态管理方案（如 MobX/Redux/Vuex/Zustand）
-- 数据库类型和版本
-- 测试框架
-- 构建工具
-
-从现有代码中分析架构模式：
-- 是否使用 DDD 分层（Domain/Application/Infrastructure）
-- 是否使用传统三层架构（Controller/Service/DAO）
-- 是否使用 Clean Architecture
-- 是否使用六边形架构（Hexagonal）
+- 从 `package.json` 提取前端依赖
+- 从 `pom.xml` 提取后端依赖
+- 从现有代码中分析架构模式
 
 ### 3. 生成宪法文档
 
@@ -61,7 +37,7 @@ invocable: true
 #### 必须包含的内容：
 1. **绝对铁律** - 不可违反的开发规则
 2. **开发原则** - 简单性原则、N+1禁令、代码质量、测试标准
-3. **架构约束** - 检测到的架构模式的分层原则、API响应格式
+3. **架构约束** - DDD分层原则、API响应格式
 4. **SDD文档职责边界** - spec/plan/tasks的What/How/When分工
 5. **SDD阶段合约与评审标准**（SDD v2 新增）
    - 评审维度与权重
@@ -111,9 +87,8 @@ invocable: true
 文档包含以下章节：
 - 绝对铁律
 - 开发原则（简单性、N+1禁令、代码质量、测试标准）
-- 架构约束（检测到的架构模式分层原则、API响应格式）
+- 架构约束（DDD分层、API响应格式）
 - SDD文档职责边界
-- SDD阶段合约与评审标准
 - 经验教训
 
 请检查文档内容，如需修改请告诉我。
@@ -123,6 +98,5 @@ invocable: true
 
 1. **首次创建**: 如果是首次创建，需要全面分析项目并生成完整文档
 2. **更新模式**: 如果文档已存在，询问用户是追加还是覆盖
-3. **技术栈自适应**: 不预设特定技术栈，根据自动检测结果生成对应约束
-4. **架构模式自适应**: 根据检测到的架构模式（DDD/三层/Clean/六边形）生成对应的分层原则
-5. **CLAUDE.md 协作**: 项目基本信息和技术栈由 CLAUDE.md 承载，宪法聚焦于开发约束和原则
+3. **业务领域**: 特别关注PDM相关的业务术语和概念
+4. **DDD架构**: 软件中心使用DDD架构，需要强调分层原则

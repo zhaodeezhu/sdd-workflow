@@ -1,59 +1,59 @@
-# User Stories
+# 用户故事
 
-> This document contains all user stories
+> 本文档包含所有用户故事
 
-## US-1: {user_story_title}
+## US-1: {用户故事标题}
 
-**As** {role}
-**I want** {feature_description}
-**So that** {business_value}
+**作为** {角色}
+**我希望** {功能描述}
+**以便于** {业务价值}
 
-**Acceptance Criteria:**
+**验收标准：**
 
 ```gherkin
-Given {precondition}
-When {action}
-Then {expected_result}
+Given {前置条件}
+When {操作}
+Then {预期结果}
 ```
 
 ```gherkin
-Given {precondition}
-When {action}
-Then {expected_result}
-```
-
----
-
-## US-2: {user_story_title}
-
-**As** {role}
-**I want** {feature_description}
-**So that** {business_value}
-
-**Acceptance Criteria:**
-
-```gherkin
-Given {precondition}
-When {action}
-Then {expected_result}
+Given {前置条件}
+When {操作}
+Then {预期结果}
 ```
 
 ---
 
-## US-3: {user_story_title}
+## US-2: {用户故事标题}
 
-**As** {role}
-**I want** {feature_description}
-**So that** {business_value}
+**作为** {角色}
+**我希望** {功能描述}
+**以便于** {业务价值}
 
-**Acceptance Criteria:**
+**验收标准：**
 
 ```gherkin
-Given {precondition}
-When {action}
-Then {expected_result}
+Given {前置条件}
+When {操作}
+Then {预期结果}
 ```
 
 ---
 
-Back to [Specification Index](./README.md)
+## US-3: {用户故事标题}
+
+**作为** {角色}
+**我希望** {功能描述}
+**以便于** {业务价值}
+
+**验收标准：**
+
+```gherkin
+Given {前置条件}
+When {操作}
+Then {预期结果}
+```
+
+---
+
+返回 [规格索引](./README.md)

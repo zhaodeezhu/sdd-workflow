@@ -1,34 +1,35 @@
-# Change Log
+# 变更记录
 
-> This document records version change history for the implementation plan
+> 本文档记录技术计划的版本变更历史
 
-## Version History
+## 版本历史
 
-| Version | Date | Change | Changed By |
-|---------|------|--------|------------|
-| 1.0 | {date} | Initial version | {author} |
+| 版本 | 日期 | 变更内容 | 变更人 |
+|------|------|----------|--------|
+| 1.0 | {date} | 初始版本 | {author} |
 
-## Detailed Changes
+## 详细变更
 
-### v1.0 (Initial Version)
+### v1.0 (初始版本)
 
-**Architecture Design**:
-- Frontend-backend separation architecture
-- Technology stack selected per constitution.md
+**架构设计**：
+- 前后端分离架构
+- 使用 React + Spring Boot
+- PostgreSQL 数据库
 
-**Data Model**:
-- New table: {table_name}
-- DTO design complete
+**数据模型**：
+- 新增表：{table_name}
+- DTO 设计完成
 
-**API Design**:
+**API 设计**：
 - RESTful API
-- Unified response format
+- 统一响应格式
 
-**Implementation Details**:
-- Service layer implementation
-- Repository layer implementation
-- Frontend component implementation
+**实现细节**：
+- Service 层实现
+- Repository 层实现
+- 前端组件实现
 
 ---
 
-Back to [Plan Index](./README.md)
+返回 [计划索引](./README.md)

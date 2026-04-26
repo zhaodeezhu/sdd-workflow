@@ -66,17 +66,8 @@ invocable: true
 | ORM | 搜索 Mapper/Repository/Model 文件，查看注解和 SQL 映射方式 |
 | 数据库 | 读取数据库连接配置（application.yml、.env 等），确认实际数据库类型 |
 
-**前端技术栈**（如果有 package.json）：
-- 框架：React / Vue / Angular / Svelte / Next.js / Nuxt
-- UI 库：Ant Design / Material UI / Element UI / Tailwind
-- 状态管理：Redux / MobX / Vuex / Pinia / Zustand
-- 构建工具：Webpack / Vite / Rspack / Rollup
-
-**后端技术栈**（如果有 pom.xml / build.gradle 等）：
-- 语言：Java / Kotlin / Go / Python / Rust / C#
-- 框架：Spring Boot / Express / FastAPI / Gin / Actix
-- ORM：MyBatis / JPA / Hibernate / Sequelize / Prisma
-- 数据库：PostgreSQL / MySQL / MongoDB / SQLite
+**前端技术栈**：框架 / UI 库 / 状态管理 / 构建工具
+**后端技术栈**：语言 / 框架 / ORM / 数据库
 
 #### 1.3 探测架构模式
 
@@ -92,8 +83,8 @@ invocable: true
 | 目录特征 | 候选模式 | 验证方法 |
 |---------|---------|---------|
 | `domain/`, `application/`, `infrastructure/` | DDD 分层 | 检查 domain 层是否有聚合根/值对象，application 层是否仅做编排 |
-| `controllers/`, `services/`, `models/` | MVC | 检查 controller->service->model 的调用链 |
-| `src/modules/`, `src/features/` | 模块化/特性驱动 | 检查模块内是否自包含（路由+组件+状态） |
+| `controllers/`, `services/`, `models/` | MVC | 检查 controller→service→model 的调用链 |
+| `src/modules/`, `src/features/` | 模块化 | 检查模块内是否自包含（路由+组件+状态） |
 | `cmd/`, `internal/` | Go 标准布局 | 检查 cmd 下的 main 入口和 internal 的包结构 |
 | `pages/`, `components/`, `stores/` | 前端 SPA | 检查路由配置和组件组织方式 |
 | 无明显分层 | 简单/待定 | 阅读入口文件判断实际组织方式 |
@@ -108,9 +99,9 @@ invocable: true
 | `vitest.config.*` | Vitest | 确认 import 来自 vitest |
 | `pytest.ini`, `conftest.py` | pytest | 确认存在 test_ 前缀的函数 |
 | `*_test.go` | Go testing | 确认使用 testing.T |
-| `*Test.java`, `*Tests.java` | JUnit | 确认使用 @Test 注解 |
-| `playwright.config.*` | Playwright (E2E) | 确认有 E2E 测试用例 |
-| `cypress.config.*` | Cypress (E2E) | 确认 cypress/ 下有测试文件 |
+| `*Test.java` | JUnit | 确认使用 @Test 注解 |
+| `playwright.config.*` | Playwright | 确认有 E2E 测试用例 |
+| `cypress.config.*` | Cypress | 确认 cypress/ 下有测试文件 |
 
 ### 2. 展示探测结果并确认
 
@@ -151,54 +142,7 @@ invocable: true
 3. **开发原则补充**：是否有团队特有的开发规范
 4. **项目特殊约束**：如 Java 版本限制、浏览器兼容性等
 
-### 4. 通知配置（可选）
-
-在生成宪法之前，引导用户配置任务完成通知。
-
-**步骤**:
-
-1. 询问用户是否需要配置飞书通知：
-   ```
-   🔔 是否配置任务完成通知？
-   
-   配置后 sdd-run / sdd-review 等长任务完成时，自动推送飞书消息通知你，无需盯盘。
-   
-   1. 现在配置（推荐）
-   2. 暂不配置（后续可通过 /sdd-notify configure 配置）
-   ```
-
-2. 如果用户选择「现在配置」，执行以下引导：
-
-   **a. 获取飞书应用凭证**：
-   ```
-   请提供飞书开放平台应用信息（在 https://open.feishu.cn/app 创建或查看）：
-   - App ID（cli_ 开头）
-   - App Secret
-   ```
-
-   **b. 获取接收者 open_id**：
-   ```
-   请提供你的飞书 open_id（ou_ 开头）。
-   
-   获取方式：
-   1. 打开 https://open.feishu.cn/api-explorer/
-   2. 右上角选择你的应用
-   3. 搜索「通过手机号获取用户 ID」
-   4. 输入你的手机号，点击调试
-   5. 复制返回的 open_id
-   ```
-
-   **c. 保存并发送测试消息**：
-   - 将配置写入 `.specify/notification.json`
-   - 获取 tenant_access_token
-   - 发送测试卡片消息验证配置
-   - 检查 `.gitignore` 是否包含 `.specify/notification.json`
-
-3. 如果用户选择「暂不配置」，跳过此步骤，继续执行
-
-> **注意**：飞书 open_id 是应用级别的，每个应用看到的同一用户 open_id 不同。不能用其他应用的 open_id，也不能用工号。必须通过本应用的 API 调试台获取。
-
-### 5. 生成项目宪法
+### 4. 生成项目宪法
 
 基于确认的探测结果和补充信息，生成 `.specify/memory/constitution.md`。
 
@@ -346,7 +290,7 @@ invocable: true
 <!-- 在此添加项目中遇到的实际问题和解决方案 -->
 ```
 
-### 6. 创建目录结构
+### 5. 创建目录结构
 
 确保以下目录存在：
 
@@ -364,7 +308,7 @@ invocable: true
 mkdir -p .specify/memory .specify/specs
 ```
 
-### 7. 输出初始化报告
+### 6. 输出初始化报告
 
 ```
 ━━━ SDD 初始化完成 ━━━
@@ -382,12 +326,6 @@ mkdir -p .specify/memory .specify/specs
 🚀 开始使用 SDD:
   /sdd-specify <功能名称>          创建功能规格
   /sdd-run <id> <功能描述>         全自动流水线（推荐）
-
-🔔 配置任务完成通知（可选）:
-  /sdd-notify configure            配置飞书通知
-
-  如果不配置，sdd-run/sdd-review 完成时不会打扰你。
-  配置后长任务完成自动推送到飞书，无需盯盘。
 ```
 
 ## 注意事项

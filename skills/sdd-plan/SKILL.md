@@ -29,7 +29,7 @@ invocable: true
 - **类名、方法名**：具体的命名设计
 - **架构图**：带代码级细节的架构图
 - **API 详细设计**：完整的 URL path、参数、响应格式
-- **调用链路**：完整的模块间调用链路
+- **调用链路**：Controller → Service → Repository 的完整链路
 - **修改清单**：所有需要变更的文件及变更类型
 
 ### SDD 文档职责分工
@@ -63,15 +63,15 @@ tasks.md   → When（何时做）：任务分解、执行顺序、进度跟踪
 读取测试用例设计: `.specify/specs/{feature_id}/testcases.md`
 
 **重点关注**:
-- 单元测试场景 → 驱动业务逻辑层设计
-- 集成测试场景 → 驱动数据访问层设计
+- 单元测试场景 → 驱动领域服务设计
+- 集成测试场景 → 驱动仓储设计
 - API测试场景 → 驱动接口设计
 - 前端测试场景 → 驱动组件设计
 - 边界条件 → 驱动异常处理设计
 
 ### 3. 读取项目上下文
-- `.specify/memory/constitution.md` - 技术栈约束和架构模式
-- `CLAUDE.md` - 项目配置和目录结构
+- `.specify/memory/constitution.md` - 技术栈约束
+- `CLAUDE.md` - 项目配置
 - 相关模块的现有代码
 
 ### 3. 技术调研（如需要）
@@ -88,7 +88,7 @@ tasks.md   → When（何时做）：任务分解、执行顺序、进度跟踪
 ##### 4.1 架构设计
 - 整体架构图（ASCII或描述）
 - 模块划分
-- 技术栈确认（从 constitution.md 读取）
+- 技术栈确认
 
 ##### 4.2 数据模型
 - 数据库表设计（DDL）
@@ -103,11 +103,11 @@ tasks.md   → When（何时做）：任务分解、执行顺序、进度跟踪
 ##### 4.4 前端实现
 - 页面结构
 - 组件设计
-- 状态管理方案（参考 constitution.md）
+- 状态管理
 - 路由配置
 
 ##### 4.5 后端实现
-- 架构分层设计（参考 constitution.md 中的架构模式）
+- DDD分层设计
 - 核心类设计
 - 业务流程
 
@@ -122,24 +122,24 @@ tasks.md   → When（何时做）：任务分解、执行顺序、进度跟踪
 ### Phase 1 合约（后端）
 
 #### 交付物清单
-- [ ] 数据模型层：对应实体和服务
-- [ ] 数据访问层：仓储/Repository + 映射
-- [ ] 应用/服务层：业务逻辑
-- [ ] API层：控制器/路由
-- [ ] 数据库变更：新增/修改的表
+- [ ] Domain 层：XXXEntity, XXXService
+- [ ] Repository 层：XXXRepository + Mapper
+- [ ] Application 层：XXXAppService
+- [ ] Controller 层：XXXController
+- [ ] 数据库变更：新增 xxx_table
 
 #### 验证标准
 | # | 验证项 | 验证方式 | 关联 |
 |---|--------|----------|------|
-| 1 | 创建 API 返回正确数据格式 | API调用验证 | spec Group A 完成定义 #1 |
-| 2 | 查询支持分页和筛选 | 参数测试 | spec Group A 完成定义 #2, #3 |
-| 3 | 数据访问层无 N+1 查询 | 代码审查 | constitution 相关章节 |
-| 4 | 架构分层正确 | 代码审查 | constitution 架构约束 |
+| 1 | 创建 API 返回正确数据格式 | curl 调用验证 | spec Group A 完成定义 #1 |
+| 2 | 查询支持分页和筛选 | curl + 参数测试 | spec Group A 完成定义 #2, #3 |
+| 3 | Service 层无 N+1 查询 | 代码审查 | constitution §2.2 |
+| 4 | DDD 分层正确 | 代码审查 | constitution §3.1 |
 
 #### 质量阈值
-- 所有 API 端点可访问且返回项目约定的响应格式
+- 所有 API 端点可访问且返回 `{ status: "0" }` 格式
 - 无 N+1 查询
-- 架构分层正确（参考 constitution.md 中的架构约束）
+- DDD 分层正确（Domain 不依赖 Infrastructure）
 ```
 
 **合约设计原则**:
@@ -171,9 +171,7 @@ tasks.md   → When（何时做）：任务分解、执行顺序、进度跟踪
 
 ### 7. 检测文档大小
 
-plan.md 超过 1000 行时：
-- **sdd-run 模式**：主进程在 Plan Agent 完成后自动检测行数，超阈值则派发 sdd-split Agent 执行 `/sdd-split plan {feature_id} --auto` 强制拆分为模块化结构，支持下游 Agent 渐进式加载。
-- **手动模式**：提示用户使用 `/sdd-split plan {feature_id}` 手动拆分。
+plan.md 超过 1000 行时，自动执行 `/sdd-split plan {feature_id} --auto` 拆分（在 sdd-run 中）或提示用户使用 `/sdd-split plan {feature_id}`（手动模式下）。
 
 ### 8. 交互确认
 向用户展示技术计划要点，询问是否需要调整。
@@ -186,9 +184,9 @@ plan.md 超过 1000 行时：
 📋 技术方案要点：
 
 1. 架构设计
-   - 前端: 项目前端技术栈 + 状态管理方案（参考 constitution.md）
-   - 后端: 项目架构模式（参考 constitution.md）
-   - 数据库: 使用项目数据库
+   - 前端: React组件 + MobX Store
+   - 后端: DDD分层，新建Auth领域
+   - 数据库: 复用cplm.obj_user表
 
 2. 数据模型
    - 无新增表，使用现有用户表
@@ -200,21 +198,22 @@ plan.md 超过 1000 行时：
    - POST /api/auth/refresh - 刷新Token
 
 4. 前端实现
-   - 页面: 登录页面组件
-   - 状态管理: 认证状态
-   - API: 认证接口调用
+   - 页面: src/pages/auth/Login/
+   - Store: src/_stores/AuthStore.js
+   - API: src/_utils/api/auth.js
 
 5. 后端实现
-   - 核心业务逻辑: 认证服务
-   - API层: 认证路由/控制器
-   - 数据访问: 认证数据仓储
+   - Domain: AuthEntity, AuthService
+   - Application: AuthAppService
+   - Persistence: AuthRepository
+   - Controller: AuthController
 
 请检查技术方案，如需调整请告诉我。
 ```
 
 ## 分层模板参考
 
-架构分层模板见 CLAUDE.md 和 constitution.md 中的架构约束。不同架构模式（DDD、传统三层、Clean Architecture 等）对应不同的分层方式。
+DDD 和传统分层结构见 CLAUDE.md 和 constitution.md 中的架构约束。
 
 ## 反馈触发点
 
@@ -230,8 +229,8 @@ plan.md 超过 1000 行时：
 ## 注意事项
 
 1. **遵循宪法**: 技术方案必须符合项目宪法的约束
-2. **架构一致**: 遵循项目既定的架构模式（参考 constitution.md）
-3. **数据库规范**: 注意使用项目正确的数据库 schema 和命名规范
-4. **API规范**: 遵循项目既定的 API 设计风格和响应格式
+2. **DDD原则**: 软件中心严格遵循DDD分层原则
+3. **数据库Schema**: 注意区分cplm和cplm_sw
+4. **API规范**: 遵循RESTful风格，统一响应格式
 5. **复用优先**: 优先考虑复用现有组件和服务
 6. **性能考量**: 设计阶段考虑索引、缓存等优化
