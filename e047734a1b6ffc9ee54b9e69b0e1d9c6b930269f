@@ -1,0 +1,40 @@
+skills/sdd-fix/SKILL.md
+  851533f46fd3f76f 1-554
+templates/skills/sdd-fix/SKILL.md
+  851533f46fd3f76f 1-554
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "e047734a1b6ffc9ee54b9e69b0e1d9c6b930269f",
+  "prompts": {
+    "851533f46fd3f76f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab0f6003-1910-4204-b676-fbd63ec0d79f",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 1108,
+      "total_deletions": 0,
+      "accepted_lines": 2573,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/15df9fbce6a7d690326a61a166de13e7d4c6eb31f20b09b1bfd14699c82a4c80"
+    },
+    "fc44ac776dcfbbec": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03dae531-0526-4074-bf61-9349e281f2a8",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 773,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/6520ce6e778e1c315ba6fa77fc498238533af0ee0a25a98fd27bdab76212e041"
+    }
+  }
+}

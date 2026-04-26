@@ -1,0 +1,44 @@
+src/installer.js
+  d694c7aed7d8e79a 137,139-140,142,145-146,148-150,562-564
+skills/sdd-notify/SKILL.md
+  d694c7aed7d8e79a 1-407
+README.zh-CN.md
+  d694c7aed7d8e79a 177-190,289-291
+skills/sdd-review/SKILL.md
+  d694c7aed7d8e79a 675-685
+registry/registry.json
+  d694c7aed7d8e79a 137-146
+skills/sdd-notify/manifest.json
+  d694c7aed7d8e79a 1-6
+README.md
+  d694c7aed7d8e79a 177-190,289-291
+skills/sdd-init/SKILL.md
+  d694c7aed7d8e79a 111-158,306,324,342-347
+package.json
+  d694c7aed7d8e79a 3
+templates/skills/sdd-init/SKILL.md
+  d694c7aed7d8e79a 111-119,121,123-138,140-158,306,324,342-347
+skills/sdd-run/SKILL.md
+  d694c7aed7d8e79a 384-394,438
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8dea106a5b10044cf2e8c489032388580b6e9a46",
+  "prompts": {
+    "d694c7aed7d8e79a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fe1630b-ca7f-456c-9fef-ef5c251a4342",
+        "model": "glm-5.1"
+      },
+      "human_author": "zhaoxiuquan",
+      "messages": [],
+      "total_additions": 796,
+      "total_deletions": 198,
+      "accepted_lines": 719,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/8db7b646e13c134f90484f86dde615d2d63dc72c955828d2957c9adf5d428e75"
+    }
+  }
+}
